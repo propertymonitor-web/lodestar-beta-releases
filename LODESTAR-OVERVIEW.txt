@@ -1,0 +1,323 @@
+LODESTAR  -  THE FAMILY OF MESHCORE FIRMWARE BY FEAR REACTIVE
+=============================================================
+Overview, how each one differs, how LODESTAR compares with other options,
+and answers to common questions.   Status: BETA TEST.   Free and open source.
+
+
+WHAT IS LODESTAR?
+-----------------
+LODESTAR is a family of firmware for MeshCore radios. MeshCore is an
+open-source system that lets cheap LoRa radios pass text messages from
+radio to radio with no cell signal, no Wi-Fi and no monthly fee. LODESTAR
+does not replace MeshCore. It is MeshCore with extra brains added for
+people who take their radios out of the house: driving, hiking, boating,
+camping, and exploring.
+
+You flash it onto a radio you already own (or buy), the same way you would
+flash stock MeshCore, using the web flasher at https://flasher.meshcore.io
+in Chrome or Edge. Your phone app, your contacts and your channels keep
+working as before.
+
+
+THE FAMILY AT A GLANCE
+----------------------
+Name      Role              Radios (see "Supported radios" below)       Status
+-------   ---------------   ------------------------------------------  ----------------
+NOVA      Companion         Heltec V4 R2, XIAO nRF52840 + Wio-SX1262    Beta
+          (the radio your
+          phone talks to)
+ORION     Companion,        Heltec V4 R2, XIAO nRF52840 + Wio-SX1262    Beta
+          wardriving
+          edition
+PULSAR    Repeater          Heltec V4 R2, XIAO ESP32S3 + Wio-SX1262,    Beta
+                            XIAO nRF52840 + Wio-SX1262, SenseCAP Solar
+                            Node P1-Pro
+HEARTH    Room server       XIAO ESP32S3 + Wio-SX1262                   Beta
+HELIOS    Solar repeater    SenseCAP Solar Node P1-Pro                  In development,
+                                                                        not released
+
+Every firmware (except HELIOS, which is not out yet) comes in a US build
+(915 MHz region settings, speeds in mph) and an EU build (EU/UK region
+settings, speeds in km/h) where that matters. Pick the one for where you live.
+
+
+NOVA  -  the smarter companion
+------------------------------
+Who it is for: anyone who carries a MeshCore companion radio away from home.
+
+Stock MeshCore connects your phone to the mesh. NOVA keeps all of that and
+answers the questions you really have while you are out:
+  * "Can I reach anyone from here?"   Link screen: the repeaters your radio
+    hears right now, ranked best first, with a score and an arrow for
+    getting better or worse.
+  * "Did my message get through, and who carried it?"   Sent screen: sent,
+    heard by repeater 3F, delivered in 4 seconds, or failed.
+  * "How far back was the last place I had coverage?"   Back screen: an
+    arrow and distance to the last place you had a usable repeater.
+  * "How long will the battery last?"   Battery screen: percentage, trend,
+    rough time left, and a graph.
+  * "Is it worth walking up that hill?"   Range screen: ask nearby
+    repeaters to answer and see GOOD / OK / WEAK / NONE for where you stand.
+  Also: trip distance and speed, power profiles (hike / car / desk), quiet
+  hours (no sound or screen wake at night, favourites still get through),
+  and a live dashboard page on your computer with the full detail, a street
+  map of your trip, and downloadable logs.
+Screens are on the Heltec V4 R2. The XIAO nRF52840 has no screen, so you
+use the dashboard instead.
+What NOVA does not do: it only listens and keeps score. It does not change
+how packets are routed.
+
+
+ORION  -  the wardriving edition of NOVA
+----------------------------------------
+Who it is for: people who want to MAP the mesh. Drive or walk with a radio
+that has GPS and ORION records every repeater and companion it hears.
+  * Green dot on the map = a repeater. Blue square = a companion.
+  * Your route is drawn as a line on a real street map.
+  * Download the results as a spreadsheet file (CSV), a map file (GeoJSON)
+    or a GPS track with points (GPX).
+  * Offline maps: download your state (or the Route 66 map) at home and the
+    map still works with no signal.
+ORION is the same firmware as NOVA with the ORION name and the dashboard
+opening in wardriving mode. If mapping is why you bought it, choose ORION.
+Without a GPS, only nodes that announce their own position can be placed.
+Please treat the logs as private: they contain other people's radio names
+and the places they announce.
+
+
+PULSAR  -  the repeater that moves
+----------------------------------
+Who it is for: anyone running a repeater that is NOT bolted to a tower: in
+a vehicle, on a boat, on foot, or at a camp.
+
+A tower never changes its neighbours. A vehicle gains and loses them all
+day. PULSAR keeps a live ranking of the repeaters it can hear, scored on
+(1) whether that repeater really passes along what we send, (2) signal
+quality, and (3) how few hops its traffic needs. It uses the ranking to:
+  * decide WHEN to forward: the best-placed repeater goes first, a weak one
+    yields to better-placed neighbours;
+  * drop its own queued copy of a packet when a strong uplink already sent
+    it, which saves airtime for everyone;
+  * avoid flip-flopping between two similar uplinks while you drive;
+  * forget repeaters you have driven away from.
+It ALWAYS forwards and never silences your node. If it has no good uplink,
+it behaves exactly like the stock MeshCore repeater. The command "lodestar"
+prints the live ranked table.
+Honest limit: MeshCore does not let a repeater hand a packet to one chosen
+neighbour, so PULSAR steers by timing and by cancelling duplicates. It also
+cannot read your messages (they are encrypted).
+A fixed repeater whose neighbours never change gains less from PULSAR.
+
+
+HEARTH  -  the room server
+--------------------------
+Who it is for: groups, clubs, camps and neighbourhoods that want a message
+board that is always on. A room server is MeshCore's "bulletin board": it
+keeps the most recent messages so people who were out of range can read
+what they missed when they come back. It is not a repeater (stock MeshCore
+advises against making it one).
+HEARTH is stock MeshCore room-server firmware for the XIAO ESP32S3 with the
+LODESTAR HEARTH name. Be clear about what it is: a ready-made, tested build
+with the family branding, not a new routing system.
+
+
+HELIOS  -  the solar repeater (coming)
+--------------------------------------
+HELIOS is planned as the solar-powered repeater for the SenseCAP Solar Node
+P1-Pro: a repeater you can mount on a pole or a roof and leave. It is in
+development and not released. Nothing in this file should be read as a
+promise of a date or a feature list.
+
+
+SUPPORTED RADIOS
+----------------
+  * Heltec WiFi LoRa 32 V4, version R2 ONLY (ESP32-S3R2). It is NOT for the
+    V4-R8. The two use different pins for GPS and power. Check your listing.
+  * Seeed Studio XIAO nRF52840 + Wio-SX1262 kit.
+  * Seeed Studio XIAO ESP32S3 + Wio-SX1262 kit.
+  * Seeed Studio SenseCAP Solar Node P1-Pro.
+Never power any radio on without its antenna screwed on.
+
+
+HOW LODESTAR COMPARES
+---------------------
+vs STOCK MESHCORE FIRMWARE
+  Stock MeshCore is the base, and it works well. LODESTAR is stock MeshCore
+  plus extras, built on top of it. What you gain:
+    - NOVA / ORION: delivery tracking, link ranking, trip and battery
+      screens, dashboard with map, quiet hours, power profiles.
+    - PULSAR: live repeater ranking, smarter forwarding timing, duplicate
+      cancelling, a ranked table.
+  What you give up: LODESTAR is a beta from a small team, and it follows
+  MeshCore releases a little behind. Stock MeshCore has far more users and
+  testers. If you want the most proven build, run stock. If you want the
+  extra information and are happy to report problems, run LODESTAR.
+  You can always go back to stock by flashing it again.
+
+vs OTHER COMMUNITY MESHCORE BUILDS
+  Other people also publish custom MeshCore firmware. LODESTAR's focus is
+  being useful while MOVING (link ranking, "get back to coverage", a
+  repeater that adapts as its neighbours change) and mapping the mesh
+  (ORION). Compare the feature lists and pick what fits your use.
+
+vs MESHTASTIC
+  Meshtastic is a different, separate project that uses the same kind of
+  radio. The two do not talk to each other, and you choose one firmware per
+  radio. From published comparisons (sources below):
+    - Roles. Meshtastic uses one node type with optional router/repeater
+      settings. MeshCore has distinct roles (companion, repeater, room
+      server), and LODESTAR is built around those.
+    - Routing. Meshtastic floods channel messages up to a hop limit (3 by
+      default, 7 at most), and newer versions learn routes for direct
+      messages. MeshCore finds a path with a first flood, then sends later
+      messages along that path, and allows up to 64 hops.
+    - Quiet network. MeshCore repeaters only forward, and clients do not
+      repeat, which people report as using less airtime on big meshes.
+    - Store and forward. MeshCore has room servers for missed messages.
+    - Where Meshtastic is stronger. It is generally seen as easier to set
+      up, has more documentation, and has built-in position sharing,
+      sensor telemetry, MQTT, ATAK and Home Assistant support. If you want
+      position sharing among friends with the least fuss, Meshtastic is a
+      good choice.
+  Neither is "better" for everybody. LODESTAR only makes sense if you have
+  chosen MeshCore.
+
+vs SATELLITE MESSENGERS, CELL PHONES AND TWO-WAY RADIOS
+  A mesh needs other radios nearby, or a repeater in range. A satellite
+  messenger works almost anywhere with a view of the sky, at a monthly
+  cost, and is the right tool for emergencies. A mesh has no monthly fee
+  and is good for groups and for areas with a few repeaters, but it is
+  NOT a replacement for a satellite messenger, a phone, or 911.
+
+
+QUESTIONS AND ANSWERS
+---------------------
+
+Q: What do I need to get started?
+A: A supported radio with its antenna, a USB data cable, a computer with
+   Chrome or Edge, and the firmware file (from the setup zip or the
+   releases page). Flash it at https://flasher.meshcore.io, choose "Custom
+   Firmware". Each setup zip has a step-by-step setup.txt for beginners.
+
+Q: Does it cost anything?
+A: No. The firmware is free and open source. You only pay for the radio.
+
+Q: Will it work with the normal MeshCore phone app?
+A: Yes. NOVA and ORION connect to the MeshCore app over Bluetooth as usual.
+
+Q: Do I lose my contacts and settings if I install it?
+A: Flashing over the top normally keeps them. Do NOT tick "Erase" unless you
+   mean to wipe the radio. Take a backup from the app first, to be safe.
+
+Q: Can I go back to stock MeshCore?
+A: Yes. Flash the stock firmware at flasher.meshcore.io the same way.
+
+Q: Which one do I need: NOVA, ORION, PULSAR or HEARTH?
+A: One radio, one firmware.
+     - A radio your phone connects to: NOVA (or ORION if you want to map).
+     - A repeater: PULSAR.
+     - A message board for a group: HEARTH.
+   You choose per radio. A normal setup is one NOVA companion for you and
+   optionally a PULSAR repeater in the car.
+
+Q: What is the difference between NOVA and ORION?
+A: The firmware is the same. ORION carries the wardriving name and opens the
+   dashboard in wardriving mode. Choose ORION if mapping is the goal.
+
+Q: Do I need a GPS?
+A: Not to use the radio. For trip screens, speed, the back-to-coverage
+   arrow, and placing nodes you hear on a map, yes. The Heltec V4 R2 can
+   take a GPS module. The XIAO boards do not enable GPS in MeshCore.
+   PULSAR works fine without GPS.
+
+Q: Does ORION track people?
+A: It lists the radios whose adverts it hears, which are broadcasts that
+   every MeshCore radio sends openly, and the position they announce about
+   themselves. It cannot read messages. Still, a companion usually
+   belongs to a person, so keep the logs private and do not publish a list
+   of names and places. Know and follow your local laws.
+
+Q: Will PULSAR make my network faster?
+A: It aims to reduce wasted airtime and make hand-off between repeaters
+   smoother as you move. It cannot create range, and a repeater that never
+   moves gains little. Beta testers' drive logs are how it improves.
+
+Q: Is PULSAR a normal repeater for my home or hilltop?
+A: It works as a normal MeshCore repeater, but its extra intelligence is
+   aimed at repeaters that move. For a fixed site, stock MeshCore is fine.
+
+Q: Does NOVA send anything on its own?
+A: Only one thing: the discovery request when YOU use the Range screen.
+   Otherwise it listens and keeps score.
+
+Q: Why does the Sent screen say "unheard" for a channel message?
+A: MeshCore channel messages have no acknowledgement, so the radio can only
+   tell you whether it heard a repeater pass your message on.
+
+Q: Does the dashboard need the internet?
+A: To load, the live page does. A copy of the dashboard (dashboard.html in
+   the zip) opens from a file. The street map needs internet unless you load
+   an offline map. The radio's data goes only from the USB cable to your
+   computer; the page does not send it anywhere.
+
+Q: How do offline maps work?
+A: Before a trip, open the dashboard's "Offline maps" box, pick your state
+   (all 50 are there, plus a Route 66 map), press Download, then "Load a
+   map file". Files are 7 to 380 MB. The dashboard keeps them in your
+   browser and switches to them when there is no signal. The maps come from
+   OpenStreetMap data built by Protomaps, because the normal online map
+   servers do not allow bulk downloading.
+
+Q: Which browsers work?
+A: Chrome or Edge on a computer, for flashing and for the dashboard. Firefox
+   and Safari cannot talk to USB radios.
+
+Q: Does it work outside the USA?
+A: Yes. The EU builds use EU/UK settings and km/h. Always set the radio
+   region and frequency to what is legal and agreed on in your own area.
+   The EU/UK presets in the beta have not all been verified in the field.
+
+Q: I have a Heltec V4-R8. Can I use it?
+A: Not with these builds. They are for the R2 only because the pins for GPS
+   and power differ. Do not flash an R2 build on an R8.
+
+Q: Is it tested? Can I trust it?
+A: It is a beta. The logic is covered by automated tests on every code
+   change, and testers have run NOVA (including speed readout) and HEARTH
+   on real radios. Some boards (the XIAO and SenseCAP builds) are newer and
+   have had less real-world use. It is not something to bet your life on.
+   Bug reports and drive logs are welcome.
+
+Q: Can I rely on it in an emergency?
+A: No. A radio mesh is a backup, not a replacement for 911, a phone, or a
+   satellite messenger. It only works if other radios or repeaters are
+   within range.
+
+Q: Is it affiliated with MeshCore or Meshtastic?
+A: No. LODESTAR is an independent project by FEAR REACTIVE that builds on
+   the open-source MeshCore firmware. MeshCore and Meshtastic are their own
+   projects.
+
+Q: When is HELIOS (the solar repeater) coming?
+A: There is no date. It is in development for the SenseCAP Solar Node
+   P1-Pro. Follow the project page for news.
+
+Q: Where do I get updates and get help?
+A: NOVA and ORION: https://github.com/propertymonitor-web/lodestar_nova_alpha
+   PULSAR and HEARTH: https://github.com/propertymonitor-web/lodestar.alpha2
+   Find releases under "Releases" and report problems under "Issues".
+   Dashboard: https://propertymonitor-web.github.io/lodestar_nova_alpha/
+
+
+SOURCES FOR THE COMPARISONS
+---------------------------
+  MeshCore FAQ:  https://docs.meshcore.io/faq/
+  Meshtastic vs MeshCore (a hands-on review, 2026):
+  https://adrelien.com/meshtastic-vs-meshcore-i-run-both-heres-the-honest-truth-2026/
+Third-party descriptions of other projects may change. Check their own
+pages for current details.
+
+
+(c) FEAR REACTIVE. LODESTAR is an independent project and is provided as a
+beta test build, without warranty. Always use the radio only on frequencies
+and power levels that are legal where you are.
