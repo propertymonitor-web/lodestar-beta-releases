@@ -2,13 +2,13 @@
 
 The beta downloads for the LODESTAR family of MeshCore firmware, by FEAR REACTIVE.
 
-**Get them from the [Releases page](https://github.com/propertymonitor-web/loadstar-beta-releases/releases/latest).** Each release has one setup zip per product and region, plus `LODESTAR-ALL-beta1.zip` with everything in one download. Every zip has its own step-by-step `setup.txt` or `readme.txt` for beginners.
+**Beta 1 downloads are in the [`beta1`](beta1) folder.** There is one setup zip per product and region, plus [`LODESTAR-ALL-beta1.zip`](https://github.com/propertymonitor-web/loadstar-beta-releases/raw/main/beta1/LODESTAR-ALL-beta1.zip) with everything in one download. Every zip has its own step-by-step `setup.txt` or `readme.txt` for beginners.
 
 | Product | What it is | Zips |
 |---|---|---|
-| **NOVA** | Companion firmware | `LODESTAR-NOVA-US-beta1.zip`, `LODESTAR-NOVA-EU-beta1.zip` |
-| **ORION** | Wardriving edition of NOVA | `LODESTAR-ORION-beta1.zip` (US and EU inside) |
-| **PULSAR** | Repeater | `LODESTAR-PULSAR-US-beta1.zip`, `LODESTAR-PULSAR-EU-beta1.zip` |
+| **NOVA** | Companion firmware | [`LODESTAR-NOVA-US-beta1.zip`](https://github.com/propertymonitor-web/loadstar-beta-releases/raw/main/beta1/LODESTAR-NOVA-US-beta1.zip), [`LODESTAR-NOVA-EU-beta1.zip`](https://github.com/propertymonitor-web/loadstar-beta-releases/raw/main/beta1/LODESTAR-NOVA-EU-beta1.zip) |
+| **ORION** | Wardriving edition of NOVA | [`LODESTAR-ORION-beta1.zip`](https://github.com/propertymonitor-web/loadstar-beta-releases/raw/main/beta1/LODESTAR-ORION-beta1.zip) (US and EU inside) |
+| **PULSAR** | Repeater | [`LODESTAR-PULSAR-US-beta1.zip`](https://github.com/propertymonitor-web/loadstar-beta-releases/raw/main/beta1/LODESTAR-PULSAR-US-beta1.zip), [`LODESTAR-PULSAR-EU-beta1.zip`](https://github.com/propertymonitor-web/loadstar-beta-releases/raw/main/beta1/LODESTAR-PULSAR-EU-beta1.zip) |
 | **HEARTH** | Room server (XIAO ESP32S3) | Release assets in the [lodestar.alpha2 releases](https://github.com/propertymonitor-web/lodestar.alpha2/releases) |
 | **HELIOS** | Solar repeater | In development, not released |
 
