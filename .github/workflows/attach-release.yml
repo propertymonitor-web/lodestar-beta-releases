@@ -1,0 +1,41 @@
+name: Attach files to a release
+
+run-name: "Attach ${{ inputs.folder }} to ${{ inputs.tag }}"
+
+# Uploads every file in a folder of this repository (for example beta1) to an existing release.
+# An existing asset with the same name is replaced.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag of the existing release, e.g. Testers_Release"
+        required: true
+        default: Testers_Release
+        type: string
+      folder:
+        description: "Folder in this repository whose files are attached, e.g. beta1"
+        required: true
+        default: beta1
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          FOLDER: ${{ inputs.folder }}
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          [[ "$FOLDER" =~ ^[A-Za-z0-9._-]+$ ]] && [ -d "$FOLDER" ] || fail "No such folder: $FOLDER"
+          gh release view "$TAG" >/dev/null 2>&1 || fail "No release with the tag $TAG"
+          FILES=("$FOLDER"/*)
+          [ -e "${FILES[0]}" ] || fail "The folder is empty"
+          OUT=$(gh release upload "$TAG" "${FILES[@]}" LODESTAR-OVERVIEW.txt --clobber 2>&1) || fail "upload: $OUT"
+          echo "Attached ${#FILES[@]} files plus LODESTAR-OVERVIEW.txt to $TAG"
