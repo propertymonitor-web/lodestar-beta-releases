@@ -26,17 +26,17 @@ Name      Role              Radios (see "Supported radios" below)       Status
 NOVA      Companion         Heltec V4 R2, XIAO nRF52840 + Wio-SX1262    Beta
           (the radio your
           phone talks to)
-ORION     Companion,        Heltec V4 R2, XIAO nRF52840 + Wio-SX1262    Beta
+ORION     Companion,        Heltec V4 R2                                Beta
           wardriving
           edition
 PULSAR    Repeater          Heltec V4 R2, XIAO ESP32S3 + Wio-SX1262,    Beta
                             XIAO nRF52840 + Wio-SX1262, SenseCAP Solar
                             Node P1-Pro
 HEARTH    Room server       XIAO ESP32S3 + Wio-SX1262                   Beta
-HELIOS    Solar repeater    SenseCAP Solar Node P1-Pro                  In development,
-                                                                        not released
+HELIOS    Solar repeater    SenseCAP Solar Node P1-Pro (GPS build) and  Alpha
+                            P1 without GPS (no-GPS build)
 
-Every firmware (except HELIOS, which is not out yet) comes in a US build
+NOVA and PULSAR come in a US build
 (915 MHz region settings, speeds in mph) and an EU build (EU/UK region
 settings, speeds in km/h) where that matters. Pick the one for where you live.
 
@@ -121,12 +121,20 @@ LODESTAR HEARTH name. Be clear about what it is: a ready-made, tested build
 with the family branding, not a new routing system.
 
 
-HELIOS  -  the solar repeater (coming)
---------------------------------------
-HELIOS is planned as the solar-powered repeater for the SenseCAP Solar Node
-P1-Pro: a repeater you can mount on a pole or a roof and leave. It is in
-development and not released. Nothing in this file should be read as a
-promise of a date or a feature list.
+HELIOS  -  the solar repeater
+-----------------------------
+Who it is for: anyone putting a repeater on a roof or pole on a SenseCAP
+Solar Node and leaving it there.
+HELIOS is PULSAR plus a read-only battery watch. The command "helios" shows
+battery volts, an approximate percent, GOOD / LOW / CRITICAL and the trend;
+"helios history" shows hourly lowest and highest volts for up to 48 hours
+(kept in memory, cleared on restart); "helios stats" shows the last 24 hours
+and how often the battery went LOW or CRITICAL. It never changes charging,
+radio or sleep behaviour.
+Two builds: one for the P1-Pro (built-in GPS, off until you turn it on) and
+one for a plain P1 with the GPS driver left out. It is ALPHA: its author has
+only just begun a field test, so treat it as unproven. Percentages are
+estimates from the battery voltage.
 
 
 SUPPORTED RADIOS
@@ -135,7 +143,8 @@ SUPPORTED RADIOS
     V4-R8. The two use different pins for GPS and power. Check your listing.
   * Seeed Studio XIAO nRF52840 + Wio-SX1262 kit.
   * Seeed Studio XIAO ESP32S3 + Wio-SX1262 kit.
-  * Seeed Studio SenseCAP Solar Node P1-Pro.
+  * Seeed Studio SenseCAP Solar Node P1-Pro (and the plain P1 for the
+    HELIOS no-GPS build).
 Never power any radio on without its antenna screwed on.
 
 
@@ -298,13 +307,16 @@ A: No. LODESTAR is an independent project by FEAR REACTIVE that builds on
    the open-source MeshCore firmware. MeshCore and Meshtastic are their own
    projects.
 
-Q: When is HELIOS (the solar repeater) coming?
-A: There is no date. It is in development for the SenseCAP Solar Node
-   P1-Pro. Follow the project page for news.
+Q: Is HELIOS (the solar repeater) ready?
+A: It is released as an ALPHA for the SenseCAP Solar Node, in a P1-Pro (GPS)
+   and a no-GPS version. It is new and in its first field test, so check it
+   closely before leaving it at a remote site.
 
 Q: Where do I get updates and get help?
 A: NOVA and ORION: https://github.com/propertymonitor-web/lodestar_nova_alpha
    PULSAR and HEARTH: https://github.com/propertymonitor-web/lodestar.alpha2
+   HELIOS: https://github.com/propertymonitor-web/helios-gps (P1-Pro, GPS)
+           https://github.com/propertymonitor-web/helios_no_gps (no GPS)
    Find releases under "Releases" and report problems under "Issues".
    Dashboard: https://propertymonitor-web.github.io/lodestar_nova_alpha/
 
