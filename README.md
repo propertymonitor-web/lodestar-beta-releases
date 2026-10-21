@@ -10,7 +10,10 @@ The beta downloads for the LODESTAR family of MeshCore firmware, by FEAR REACTIV
 | **ORION** | Wardriving edition of NOVA | [`LODESTAR-ORION-beta1.zip`](https://github.com/propertymonitor-web/lodestar-beta-releases/raw/main/beta1/LODESTAR-ORION-beta1.zip) (US and EU inside) |
 | **PULSAR** | Repeater | [`LODESTAR-PULSAR-US-beta1.zip`](https://github.com/propertymonitor-web/lodestar-beta-releases/raw/main/beta1/LODESTAR-PULSAR-US-beta1.zip), [`LODESTAR-PULSAR-EU-beta1.zip`](https://github.com/propertymonitor-web/lodestar-beta-releases/raw/main/beta1/LODESTAR-PULSAR-EU-beta1.zip) |
 | **HEARTH** | Room server (XIAO ESP32S3) | Release assets in the [lodestar.alpha2 releases](https://github.com/propertymonitor-web/lodestar.alpha2/releases) |
-| **HELIOS** | Solar repeater | In development, not released |
+| **HELIOS** | Solar repeater (SenseCAP Solar Node) | Alpha: [helios-gps](https://github.com/propertymonitor-web/helios-gps/releases) and [helios_no_gps](https://github.com/propertymonitor-web/helios_no_gps/releases) |
+| **CAIRN** | Crisis field kit companion (Heltec V4 R2 + tablet) | Alpha: [lodestar-cairn releases](https://github.com/propertymonitor-web/lodestar-cairn/releases) |
+
+Icons for every firmware (`.ico`, PNG, SVG) are in [`icons/`](icons/) and the boot-screen pictures are in [`splash/`](splash/).
 
 Read [`LODESTAR-OVERVIEW.txt`](LODESTAR-OVERVIEW.txt) for what each one does, how they differ from other options, and a Q&A.
 
