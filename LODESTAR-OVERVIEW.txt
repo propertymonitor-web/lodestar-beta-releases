@@ -1,4 +1,4 @@
-LODESTAR  -  THE FAMILY OF MESHCORE FIRMWARE BY FEAR REACTIVE
+LODESTAR  -  THE FAMILY OF MESHCORE FIRMWARE BY Wolf Reactive Systems (WRS)
 =============================================================
 Overview, how each one differs, how LODESTAR compares with other options,
 and answers to common questions.   Status: BETA TEST.   Free and open source.
@@ -303,7 +303,7 @@ A: No. A radio mesh is a backup, not a replacement for 911, a phone, or a
    within range.
 
 Q: Is it affiliated with MeshCore or Meshtastic?
-A: No. LODESTAR is an independent project by FEAR REACTIVE that builds on
+A: No. LODESTAR is an independent project by Wolf Reactive Systems (WRS) that builds on
    the open-source MeshCore firmware. MeshCore and Meshtastic are their own
    projects.
 
@@ -330,6 +330,6 @@ Third-party descriptions of other projects may change. Check their own
 pages for current details.
 
 
-(c) FEAR REACTIVE. LODESTAR is an independent project and is provided as a
+(c) Wolf Reactive Systems (WRS). LODESTAR is an independent project and is provided as a
 beta test build, without warranty. Always use the radio only on frequencies
 and power levels that are legal where you are.

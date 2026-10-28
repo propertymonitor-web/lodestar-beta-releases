@@ -1,6 +1,6 @@
 # LODESTAR beta releases
 
-The beta downloads for the LODESTAR family of MeshCore firmware, by FEAR REACTIVE.
+The beta downloads for the LODESTAR family of MeshCore firmware, by Wolf Reactive Systems (WRS).
 
 **Download the beta 1 files from the [Testers_Release page](https://github.com/propertymonitor-web/lodestar-beta-releases/releases/tag/Testers_Release)** (the same files are also in the [`beta1`](beta1) folder). There is one setup zip per product and region, plus [`LODESTAR-ALL-beta1.zip`](https://github.com/propertymonitor-web/lodestar-beta-releases/raw/main/beta1/LODESTAR-ALL-beta1.zip) with everything in one download. Every zip has its own step-by-step `setup.txt` or `readme.txt` for beginners.
 
