@@ -1,28 +1,30 @@
-# PROJECT MATRIX (BETA)
+# LODESTAR MATRIX PROJECT: matrix_project_beta
 
-By: Aries Thorne. For: Matrix Comm. Systems.
+PROJECT MATRIX. By: Aries Thorne. For: Matrix Comm. Systems.
 
-A companion radio firmware for the Heltec V4 with a Matrix-style dashboard. It is the OTR tactical firmware (NOVA + ORION radar + Mesh Analyzer) with a Matrix boot screen and one extra data line for the dashboard.
+A companion radio firmware with a Matrix-style dashboard. **Beta 1. Not yet tested on a real radio.**
 
-## What is in this release
-- `matrix-heltec_v4-mph-*` and `matrix-heltec_v4-metric-*`: firmware for the Heltec V4. Use the `-merged.bin` file for a first install and the `-update.bin` file to update a radio that already runs it.
-- `matrix.html`: the dashboard. Open it in Chrome or Edge, connect the radio over USB, or click **Try sample data**.
+## Download
+Get **`LODESTAR-MATRIX-PROJECT-beta.zip`**. It holds the User's Manual (PDF), a Quick Start Guide, a README, the dashboard (`matrix.html`) and the firmware.
 
-## The dashboard
-Splash screen ("PROJECT MATRIX / By: Aries Thorne / For: Matrix Comm. Systems"), falling code, a green phosphor map, and everything the OTR Tactical dashboard has (radar with map, trip line, found nodes, mesh analyzer, battery, offline maps, updates) plus the Matrix deck:
-- Link health score, signal weather forecast, packet pulse, link history
-- Intercept terminal (every packet heard or sent, filterable)
-- Census, top talkers, range records
-- Radio link budget (data rate, sensitivity, free-space range, airtime), airtime and duty cycle
-- System vitals (chip temperature, memory, uptime, noise floor, battery), compass and motion
-- Alerts and triggers with flash and optional beep, and rain trails on the map
+Start with the Quick Start Guide.
+
+## Firmware files in this release
+| File | Radio | Use |
+|---|---|---|
+| `matrix-heltec_v4-mph-merged.bin` / `-update.bin` | Heltec V4 R2 (with screen) | **US edition** (mph). `merged` for a first install, `update` to keep settings |
+| `matrix-heltec_v4-metric-merged.bin` / `-update.bin` | Heltec V4 R2 (with screen) | **UK/EU edition** (km/h) |
+| `matrix-heltec_v4_r8-*` | Heltec V4 R8 | Compiled, **untested** |
+| `matrix-heltec_v3-*` | Heltec V3 | Compiled, **untested** |
+| `matrix.html` | any | The dashboard |
+
+US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
 
 ## Honest limits
-- **Nothing in this beta has been tested on a real radio.** The firmware is built by GitHub Actions and the dashboard was tested with sample data in a browser only.
-- Heltec V4 only. Other boards are not built.
-- The extra values (chip temperature, memory, airtime, queue) come from a new `{"mx":...}` line the firmware prints every 2 seconds. On a radio that does not send it, those tiles stay on "waiting for the radio".
-- Link health, the forecast and the link budget are estimates worked out in the dashboard. Free-space range is a best case with no antenna gain and no obstacles.
-- The dashboard loads one web font and map tiles from the internet. Offline it falls back to a system monospace font; offline maps work as in OTR.
+- Nothing here has been run on a real radio by its makers. The firmware builds and the dashboard was tested with sample data in a browser.
+- The Heltec V4 R2 is the intended radio. The V4 R8 and V3 builds only prove that the code compiles for them.
+- The dashboard's Updates button does not know about MATRIX yet.
+- Several dashboard numbers (link health, signal weather, link budget, range guesses) are estimates.
 
 Engineered by: Aries Thorne & Todd Steinhauer for Wolf Reactive Systems (WRS)
 Special thanks to the NTXMESH community, Meshcore Community, and Pat Steinhauer-Scates for their guidance and support.
