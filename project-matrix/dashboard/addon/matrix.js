@@ -101,8 +101,12 @@
   }
 
   /* ---------- alerts ---------- */
+  /* sound: browsers keep audio locked until the page has been clicked or a key pressed once, so the audio is unlocked on the first click or key press */
   let ac = null;
-  function beep() { if (!$("mxOptBeep").checked) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; g.gain.value = 0.05; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.18); } catch (e) { /* none */ } }
+  function unlockAudio() { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === "suspended") ac.resume(); } catch (e) { /* no audio here */ } }
+  ["pointerdown", "keydown", "touchstart"].forEach((ev) => document.addEventListener(ev, unlockAudio, { passive: true }));
+  function tone(freq, at, len) { const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + at; o.type = "square"; o.frequency.value = freq; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + len); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + len + 0.02); }
+  function beep(force) { if (!force && !$("mxOptBeep").checked) return false; try { unlockAudio(); if (!ac || ac.state !== "running") { termPush("sound is locked: click anywhere on the page once to turn alert sounds on", "adv"); if (ac) ac.resume(); return false; } tone(880, 0, 0.14); tone(660, 0.18, 0.14); tone(880, 0.36, 0.22); return true; } catch (e) { return false; } }
   function alert1(key, text, cool) { const now = Date.now(); if (MX.cool[key] && now - MX.cool[key] < (cool || 60000)) return; MX.cool[key] = now;
     MX.alerts.unshift({ t: now, text }); if (MX.alerts.length > 60) MX.alerts.pop(); const ul = $("mxAlogList"); ul.innerHTML = MX.alerts.map((a) => '<li><time>' + hhmmss(a.t) + '</time><span class="a">' + esc(a.text) + "</span></li>").join("");
     const f = $("mxFlash"); f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); beep(); termPush("!! ALERT: " + text, "adv"); }
@@ -369,7 +373,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     const set = (id, k, d) => { const e = $(id); e.checked = opt(k, d); e.addEventListener("change", () => { setOpt(k, e.checked); apply(); }); };
     function apply() { applyRain(); root.classList.toggle("mxmap", $("mxOptMap").checked); }
-    set("mxOptRain", "rain", true); set("mxOptMap", "map", true); set("mxOptTrail", "trail", true); set("mxOptBeep", "beep", false);
+    set("mxOptRain", "rain", true); set("mxOptMap", "map", true); set("mxOptTrail", "trail", true); set("mxOptBeep", "beep", true); $("mxBeepTest").addEventListener("click", () => { if (!beep(true)) out("could not play a sound. Check the computer volume and that this tab is not muted.", "err"); });
     $("mxReplay").addEventListener("click", splash); $("mxTermClr").addEventListener("click", () => { tl.length = 0; termDirty = true; drawTerm(); }); $("mxTermF").addEventListener("change", () => { termDirty = true; });
     $("mxNote").textContent = "Display only. Nothing here sends anything to the radio. Link health, the forecast and the budget are estimates worked out in this page from what the radio reports.";
     MX.alias = getAlias(); showAlias(); try { applyTheme(localStorage.getItem("mx-theme") || "green"); } catch (e) { applyTheme("green"); }
