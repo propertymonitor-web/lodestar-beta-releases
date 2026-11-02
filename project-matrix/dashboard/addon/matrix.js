@@ -349,6 +349,21 @@
     return kids.map(tileText).filter((x) => x).join("\n");
   }
   function fallbackCopy(txt, done) { const a = document.createElement("textarea"); a.value = txt; a.style.position = "fixed"; a.style.opacity = "0"; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); done(); } catch (e) { /* the text can still be selected by hand */ } a.remove(); }
+
+  /* ---------- radar ping: called by the radar when its sweep passes a heard node ---------- */
+  MX.pingAt = 0;
+  function radarVisible() { const c = $("radarCv"); if (!c || document.hidden) return false; const r = c.getBoundingClientRect(), vh = innerHeight || 800, vw = innerWidth || 1200; const ih = Math.min(r.bottom, vh) - Math.max(r.top, 0), iw = Math.min(r.right, vw) - Math.max(r.left, 0); return r.width > 0 && ih > 0 && iw > 0 && (ih * iw) / (r.width * r.height) > 0.3; }
+  window.mxPing = function (c) {
+    const on = $("mxPingOn"); if (!on || !on.checked) return; if (!radarVisible()) return;
+    const now = performance.now(); if (now - MX.pingAt < 90) return; MX.pingAt = now;           // never a machine-gun burst when many nodes share an angle
+    try { unlockAudio(); if (!ac || ac.state !== "running") return;
+      const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), type = c && c.n ? c.n.t : 2, f0 = type === 2 ? 900 : type === 1 ? 1250 : 1600, vol = 0.07 + 0.16 * (1 - Math.min(1, (c && c.frac) || 0.5));
+      o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 0.62, t + 0.28);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+      let last = g; if (ac.createStereoPanner) { const pn = ac.createStereoPanner(); pn.pan.value = Math.max(-1, Math.min(1, Math.sin((c && c.ang) || 0) * 0.8)); g.connect(pn); last = pn; }
+      o.connect(g); last.connect(ac.destination); o.start(t); o.stop(t + 0.36); } catch (e) { /* no audio */ }
+  };
+
   /* ---------- lite mode: no falling code, no map tint, no trails (for slow or low-memory computers) ---------- */
   function setLite(on, why) { MX.lite = on; root.classList.toggle("lite", on); try { localStorage.setItem("mx-lite", on ? "1" : "0"); } catch (e) { /* none */ }
     const ck = (id, v) => { const e = $(id); if (e) e.disabled = on; if (on && e) { e.dataset.was = e.checked ? "1" : "0"; e.checked = false; } else if (e && e.dataset.was) { e.checked = e.dataset.was === "1"; } };
@@ -397,6 +412,7 @@
         const done = () => { b.textContent = "copied"; setTimeout(() => { b.textContent = "copy"; }, 1200); };
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done)); else fallbackCopy(txt, done); });
       h.appendChild(b); });
+    { const pc = $("mxPingOn"); if (pc) { pc.checked = opt("ping", false); pc.addEventListener("change", () => { setOpt("ping", pc.checked); if (pc.checked) { unlockAudio(); setTimeout(() => { if (!ac || ac.state !== "running") $("mxPingNote").textContent = "click anywhere on the page once to unlock sound, then pings will play"; }, 300); } }); } }
     $("mxOptLite").addEventListener("change", (e) => setLite(e.target.checked)); if (opt("lite", false)) setLite(true);
     apply(); splash(); requestAnimationFrame(trailTick);
     if (!MX.alias) { const w = setInterval(() => { if ($("mxSplash").style.display === "none") { clearInterval(w); askAlias(true); } }, 300); } else setTimeout(() => out("welcome back, " + MX.alias + ". type help.", "adv"), 500);

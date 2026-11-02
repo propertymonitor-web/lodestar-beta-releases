@@ -28,6 +28,9 @@ def build():
     sub('if (f.ed === "orion" && !S.orion) {', 'if (f.ed === "matrix" && !S.orion) S.orion = true;\n  if (f.ed === "orion" && !S.orion) {')
     sub('if (S.frame && S.frame.ed !== "orion") msg =', 'if (S.frame && S.frame.ed !== "orion" && S.frame.ed !== "matrix") msg =')
     sub('const product = (DASH_ID === "otr" || DASH_ID === "cairn") ? DASH_ID :', 'const product = (DASH_ID === "otr" || DASH_ID === "cairn" || DASH_ID === "matrix") ? DASH_ID :')
+    # radar ping: a hook where the sweep lights a contact, and the tick box at the top of the radar
+    sub('if (!reduce && crossed) R.lit.set(k, t);', 'if (!reduce && crossed) { R.lit.set(k, t); if (window.mxPing) window.mxPing(c); }')
+    sub('<div class="radargrid">', '<div class="row2 mxpingrow" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><label class="tog" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="mxPingOn"> RADAR PING</label><span class="note" id="mxPingNote" style="color:var(--muted)">a ping each time the sweep passes a heard node, only while the radar is on screen</span></div>\n  <div class="radargrid">')
     sub("<!--TAC-HTML-END-->", rd(d("addon", "deck.html")) + "\n<!--TAC-HTML-END-->")
     i = h.rindex("</body>")
     h = h[:i] + "<script id=\"matrix-js\">\n" + rd(d("addon", "matrix.js")) + "</script>\n" + h[i:]
