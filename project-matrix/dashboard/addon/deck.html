@@ -5,15 +5,20 @@
     <label class="tog"><input type="checkbox" id="mxOptMap" checked> Green map</label>
     <label class="tog"><input type="checkbox" id="mxOptTrail" checked> Rain trails on map</label>
     <label class="tog"><input type="checkbox" id="mxOptBeep"> Alert beep</label>
-    <button id="mxReplay" type="button">Replay intro</button>
+    <label class="tog">Colour <select id="mxTheme"><option value="green">green</option><option value="red">red</option><option value="amber">amber</option><option value="cyan">cyan</option></select></label>
+    <button id="mxReplay" type="button">Replay intro</button><button id="mxExport" type="button">Save intercept log</button>
   </div>
   <div class="mxgrid">
+    <div class="mxt wide"><h3>Operator <small>this session</small></h3><div class="big" id="mxOp">--</div><div class="sub" id="mxOpSub"></div><div class="kv" id="mxSess"></div></div>
+    <div class="mxt wide"><h3>Spectrum waterfall <small>signal strength of every packet heard, last 10 min</small></h3><canvas id="mxCvWf" height="140"></canvas><div class="sub" id="mxWfSub">bright = many packets at that signal level</div></div>
+    <div class="mxt wide"><h3>Mesh topology <small>who you hear, by hops away</small></h3><canvas id="mxCvTopo" height="300"></canvas></div>
     <div class="mxt"><h3>Link health <small>0-100</small></h3><div class="big" id="mxHealth">--</div><div class="sub" id="mxHealthSub">waiting for data</div>
       <div class="bar" id="mxHealthBar"><i style="width:0"></i></div><div class="kv" id="mxHealthKv"></div></div>
     <div class="mxt"><h3>Signal weather</h3><div class="fc ok" id="mxFc">STANDBY</div><div class="sub" id="mxFcSub">needs a few minutes of packets</div><canvas id="mxCvWx" height="90"></canvas></div>
     <div class="mxt"><h3>Packet pulse <small>last 30 min, per minute</small></h3><canvas id="mxCvPulse" height="110"></canvas><div class="sub" id="mxPulseSub"></div></div>
     <div class="mxt"><h3>Link history <small>best repeater score</small></h3><canvas id="mxCvHist" height="110"></canvas><div class="sub" id="mxHistSub"></div></div>
     <div class="mxt wide"><h3>Intercept terminal <small>every packet this radio hears or sends</small></h3><div id="mxTerm" role="log" aria-live="off"></div>
+      <form id="mxCmdForm" class="row2" autocomplete="off"><span id="mxPrompt" style="color:var(--accent)">&gt;</span><input id="mxCmd" style="flex:1;min-width:140px" spellcheck="false" placeholder="type help" aria-label="Command line"></form>
       <div class="row2"><label class="tog"><input type="checkbox" id="mxTermPause"> Pause</label><label class="tog">Filter <select id="mxTermF"><option value="">all</option><option value="rx">heard</option><option value="tx">sent</option><option value="adv">adverts</option><option value="msg">messages</option></select></label><button id="mxTermClr" type="button">Clear</button></div></div>
     <div class="mxt"><h3>Census <small>last hour</small></h3><div id="mxCensus"></div></div>
     <div class="mxt"><h3>Top talkers <small>last hour</small></h3><div id="mxTalk"></div></div>

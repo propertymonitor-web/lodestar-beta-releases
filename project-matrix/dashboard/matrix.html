@@ -996,7 +996,7 @@ html.matrix #rainCv{ position: fixed; inset: 0; width: 100%; height: 100%; z-ind
 html.matrix.norain #rainCv{ display: none; }
 html.matrix:not(.norain) body::after{ opacity: .15; }
 /* the map in phosphor green; the markers and lines on top keep their own colours */
-html.matrix.mxmap .leaflet-tile-pane{ filter: grayscale(1) invert(1) contrast(1.15) brightness(.7) sepia(1) hue-rotate(75deg) saturate(4); }
+html.matrix.mxmap .leaflet-tile-pane{ filter: grayscale(1) invert(1) contrast(1.15) brightness(.7) sepia(1) hue-rotate(var(--hue, 75deg)) saturate(4); }
 html.matrix .leaflet-container{ background: #000a04; }
 /* splash */
 #mxSplash{ position: fixed; inset: 0; z-index: 9000; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity .9s ease; cursor: pointer; }
@@ -1044,6 +1044,17 @@ html.matrix #btnTheme{ display: none; }
 #mxDeck .fc{ font: 700 22px var(--mono); letter-spacing: .1em; }
 #mxDeck .fc.ok{ color: var(--accent); } #mxDeck .fc.warn{ color: var(--warn); } #mxDeck .fc.bad{ color: var(--bad); }
 html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !important; color: #00140a !important; font-weight: 700; text-shadow: none; }
+#mxAliasBox{ position: fixed; inset: 0; z-index: 8500; background: rgba(0,0,0,.82); display: flex; align-items: center; justify-content: center; }
+#mxAliasBox[hidden]{ display: none; }
+#mxAliasForm{ border: 1px solid var(--accent); background: #000; padding: 26px 30px; text-align: center; box-shadow: 0 0 40px rgba(0,255,65,.35); max-width: 92vw; }
+#mxAliasForm .al1{ color: var(--accent); letter-spacing: .2em; font-size: 18px; text-shadow: 0 0 8px var(--accent); }
+#mxAliasForm input{ margin: 16px 0 8px; width: 100%; box-sizing: border-box; background: #000; color: var(--accent); border: 1px solid var(--line); padding: 10px; font: 20px var(--mono); text-align: center; letter-spacing: .1em; }
+#mxAliasForm .al2{ color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+#mxOp{ text-shadow: 0 0 10px var(--accent); letter-spacing: .08em; }
+#mxAliasBtn{ white-space: nowrap; }
+#mxPrompt{ font-weight: 700; }
+#mxCmd{ background: #000; color: var(--accent); border: 1px solid var(--line); padding: 6px 8px; font: 13px var(--mono); }
+#mxTerm .out{ color: #9dffb4; } #mxTerm .err{ color: var(--bad); }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap">
 </head>
@@ -1055,11 +1066,13 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
 </div>
 <canvas id="mxRainCv" style="display:none"></canvas>
 <div id="mxFlash"></div>
+<div id="mxAliasBox" hidden role="dialog" aria-label="Choose your alias"><form id="mxAliasForm"><div class="al1">IDENTIFY YOURSELF, OPERATOR</div><input id="mxAliasIn" maxlength="24" autocomplete="off" spellcheck="false" placeholder="enter alias" aria-label="Alias"><div class="al2">Saved in this browser only. Letters, numbers, - and _ . Change it any time with the Alias button.</div><button class="primary" type="submit">Jack in</button></form></div>
 <div class="wrap">
   <header class="bar">
     <h1 class="brand">PROJECT MATRIX<small>By: Aries Thorne &middot; For: Matrix Comm. Systems</small></h1>
     <span class="status" id="status" data-state="off" role="status"><span class="dot"></span><span id="statusText">Not connected</span></span>
     <span class="spacer"></span>
+    <span id="mxOpTag" class="status" style="gap:6px">operator <b id="mxOpName">?</b></span><button id="mxAliasBtn" type="button">Alias</button>
     <button id="btnConnect" class="primary">Connect radio</button>
     <button id="btnDemo">Try sample data</button>
     <button id="btnSave" disabled>Save log</button>
@@ -1096,15 +1109,20 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
     <label class="tog"><input type="checkbox" id="mxOptMap" checked> Green map</label>
     <label class="tog"><input type="checkbox" id="mxOptTrail" checked> Rain trails on map</label>
     <label class="tog"><input type="checkbox" id="mxOptBeep"> Alert beep</label>
-    <button id="mxReplay" type="button">Replay intro</button>
+    <label class="tog">Colour <select id="mxTheme"><option value="green">green</option><option value="red">red</option><option value="amber">amber</option><option value="cyan">cyan</option></select></label>
+    <button id="mxReplay" type="button">Replay intro</button><button id="mxExport" type="button">Save intercept log</button>
   </div>
   <div class="mxgrid">
+    <div class="mxt wide"><h3>Operator <small>this session</small></h3><div class="big" id="mxOp">--</div><div class="sub" id="mxOpSub"></div><div class="kv" id="mxSess"></div></div>
+    <div class="mxt wide"><h3>Spectrum waterfall <small>signal strength of every packet heard, last 10 min</small></h3><canvas id="mxCvWf" height="140"></canvas><div class="sub" id="mxWfSub">bright = many packets at that signal level</div></div>
+    <div class="mxt wide"><h3>Mesh topology <small>who you hear, by hops away</small></h3><canvas id="mxCvTopo" height="300"></canvas></div>
     <div class="mxt"><h3>Link health <small>0-100</small></h3><div class="big" id="mxHealth">--</div><div class="sub" id="mxHealthSub">waiting for data</div>
       <div class="bar" id="mxHealthBar"><i style="width:0"></i></div><div class="kv" id="mxHealthKv"></div></div>
     <div class="mxt"><h3>Signal weather</h3><div class="fc ok" id="mxFc">STANDBY</div><div class="sub" id="mxFcSub">needs a few minutes of packets</div><canvas id="mxCvWx" height="90"></canvas></div>
     <div class="mxt"><h3>Packet pulse <small>last 30 min, per minute</small></h3><canvas id="mxCvPulse" height="110"></canvas><div class="sub" id="mxPulseSub"></div></div>
     <div class="mxt"><h3>Link history <small>best repeater score</small></h3><canvas id="mxCvHist" height="110"></canvas><div class="sub" id="mxHistSub"></div></div>
     <div class="mxt wide"><h3>Intercept terminal <small>every packet this radio hears or sends</small></h3><div id="mxTerm" role="log" aria-live="off"></div>
+      <form id="mxCmdForm" class="row2" autocomplete="off"><span id="mxPrompt" style="color:var(--accent)">&gt;</span><input id="mxCmd" style="flex:1;min-width:140px" spellcheck="false" placeholder="type help" aria-label="Command line"></form>
       <div class="row2"><label class="tog"><input type="checkbox" id="mxTermPause"> Pause</label><label class="tog">Filter <select id="mxTermF"><option value="">all</option><option value="rx">heard</option><option value="tx">sent</option><option value="adv">adverts</option><option value="msg">messages</option></select></label><button id="mxTermClr" type="button">Clear</button></div></div>
     <div class="mxt"><h3>Census <small>last hour</small></h3><div id="mxCensus"></div></div>
     <div class="mxt"><h3>Top talkers <small>last hour</small></h3><div id="mxTalk"></div></div>
@@ -2910,6 +2928,7 @@ if (S.route.length || S.found.size) fitAll();
 (function () {
   "use strict";
   const root = document.documentElement, MX = { d: null, hist: [], air: [], seenRec: new WeakSet(), alerts: [], lastHeard: Date.now(), cool: {}, nfSeen: new Set() };
+  const TH = { rgb: "0,255,65", hi: "#d8ffe4" };
   const G = "#00ff41", G2 = "#7fe79b", DIM = "#0f4a22", Y = "#ffe44d", R = "#ff3b3b", C = "#4dffd2";
   const opt = (k, d) => { try { const v = localStorage.getItem("mx-" + k); return v === null ? d : v === "1"; } catch (e) { return d; } };
   const setOpt = (k, v) => { try { localStorage.setItem("mx-" + k, v ? "1" : "0"); } catch (e) { /* none */ } };
@@ -2929,8 +2948,8 @@ if (S.route.length || S.found.size) fitAll();
       if (cv.clientWidth !== w || cv.clientHeight !== h) size();
       g.fillStyle = "rgba(0,0,0," + (opts.fade || 0.09) + ")"; g.fillRect(0, 0, w, h); g.font = fs + "px monospace";
       for (let i = 0; i < cols.length; i++) { const c = cols[i], x = i * fs, y = c.y * fs;
-        g.fillStyle = "#d8ffe4"; g.fillText(GL[(Math.random() * GL.length) | 0], x, y);
-        g.fillStyle = "rgba(0,255,65,.85)"; g.fillText(GL[(Math.random() * GL.length) | 0], x, y - fs);
+        g.fillStyle = TH.hi; g.fillText(GL[(Math.random() * GL.length) | 0], x, y);
+        g.fillStyle = "rgba(" + TH.rgb + ",.85)"; g.fillText(GL[(Math.random() * GL.length) | 0], x, y - fs);
         c.y += c.v; if (y > h && Math.random() > 0.975) { c.y = -Math.random() * 10; c.v = 0.4 + Math.random() * 0.9; } } }
     size(); requestAnimationFrame(frame); return { stop() { run = false; }, start() { if (!run) { run = true; requestAnimationFrame(frame); } } };
   }
@@ -3018,7 +3037,7 @@ if (S.route.length || S.found.size) fitAll();
   /* ---------- intercept terminal ---------- */
   const tl = []; let termDirty = false;
   function termPush(txt, cls) { tl.push({ txt, cls }); if (tl.length > 400) tl.shift(); termDirty = true; }
-  function pullRecs() { const rs = recsNow(); for (let i = Math.max(0, rs.length - 60); i < rs.length; i++) { const r = rs[i]; if (MX.seenRec.has(r)) continue; MX.seenRec.add(r); if (!r.tx) MX.lastHeard = Date.now();
+  function pullRecs() { const rs = recsNow(); for (let i = Math.max(0, rs.length - 60); i < rs.length; i++) { const r = rs[i]; if (MX.seenRec.has(r)) continue; MX.seenRec.add(r); if (!r.tx) { MX.lastHeard = Date.now(); SESS.pk++; SESS.bytes += r.len || 0; }
       const nm = (typeof meshNameFor === "function" && r.id) ? meshNameFor(r.id) : "", ty = (typeof MTYPE !== "undefined" ? MTYPE[r.type] : r.type);
       const txt = hhmmss(r.t) + (r.tx ? " TX  " : " RX  ") + String(ty).padEnd(16) + (r.tx ? "" : (String(r.rssi).padStart(5) + "dBm " + r.snr.toFixed(1).padStart(5) + "dB ")) + "hop" + r.hops + " " + String(r.len).padStart(3) + "B " + (r.id ? r.id.toUpperCase() : "------") + (nm ? " " + nm : "");
       termPush(txt, r.tx ? "tx" : kind(r) === "adv" ? "adv" : kind(r) === "msg" ? "msg" : "rx"); } }
@@ -3073,6 +3092,7 @@ if (S.route.length || S.found.size) fitAll();
     { const c = cv("mxCvCmp"), g = c.g, cx = c.w / 2, cy = c.h / 2, r = Math.min(cx, cy) - 14; g.strokeStyle = DIM; g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, r, 0, 6.2832); g.stroke(); g.fillStyle = "#3fae62"; g.textAlign = "center"; g.fillText("N", cx, cy - r - 3); g.fillText("S", cx, cy + r + 11); g.textAlign = "left";
       const gp = f && f.gps; if (gp && gp.fix) { const a = (gp.course || 0) * Math.PI / 180; g.strokeStyle = G; g.lineWidth = 2.5; g.shadowColor = G; g.shadowBlur = 8; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(a) * r * 0.9, cy - Math.cos(a) * r * 0.9); g.stroke(); g.shadowBlur = 0; }
       const t = f && f.trip || {}; kvset("mxMot", gp && gp.fix ? [["speed", (gp.spd != null ? gp.spd : gp.kmh) + " " + (f.unit || "km/h")], ["heading", (gp.course || 0) + "° " + ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round((gp.course || 0) / 45) % 8]], ["satellites", String(gp.sats)], ["position", gp.lat.toFixed(5) + ", " + gp.lon.toFixed(5)], ["trip", fmt(t.km, 2) + " km"], ["top speed", t.top != null ? t.top + "" : "--"]] : [["no GPS fix", "turn GPS on from the phone app or the GPS screen"]]); }
+    drawWaterfall(); drawTopo(); drawSession();
     drawTerm();
   }
   const upfmt = (s) => { const dd = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return (dd ? dd + "d " : "") + h + "h " + m + "m"; };
@@ -3089,6 +3109,64 @@ if (S.route.length || S.found.size) fitAll();
       const age = (now - n.last) / 1000, str = Math.max(0.25, 1 - age / 1800), col = n.t === 2 ? "0,255,65" : n.t === 1 ? "77,255,210" : "255,228,77"; let c = tcols.get(k); if (!c) { c = { ph: Math.random() * 100 }; tcols.set(k, c); }
       const len = 9; for (let i = 0; i < len; i++) { const ph = ((now / 90 + c.ph) % (len + 4)); const idx = (i - ph + len + 4) % (len + 4); const y = p.y + 10 + i * 13, a = Math.max(0, (1 - i / len)) * str * (idx < 2 ? 1 : 0.55); g.fillStyle = "rgba(" + col + "," + a.toFixed(2) + ")"; g.fillText(GL[(k.charCodeAt(i % k.length) + i + ((now / 400) | 0) * (i % 3)) % GL.length], p.x - 4, y); } });
   }
+
+
+  /* ---------- operator alias, session ---------- */
+  const SESS = { t0: Date.now(), bytes: 0, pk: 0 };
+  const cleanAlias = (v) => String(v || "").replace(/[^A-Za-z0-9_\-]/g, "").slice(0, 24);
+  const getAlias = () => { try { return cleanAlias(localStorage.getItem("mx-alias")); } catch (e) { return ""; } };
+  function setAlias(v) { v = cleanAlias(v); if (!v) return false; try { localStorage.setItem("mx-alias", v); } catch (e) { /* kept for this visit only */ } MX.alias = v; showAlias(); termPush("operator alias set: " + v, "adv"); return true; }
+  function showAlias() { const a = MX.alias || "?"; $("mxOpName").textContent = a; $("mxOp").textContent = "> " + a; $("mxPrompt").textContent = a + "@matrix>"; }
+  function askAlias(first) { const box = $("mxAliasBox"), inp = $("mxAliasIn"); inp.value = first ? "" : MX.alias || ""; box.hidden = false; setTimeout(() => inp.focus(), 50); }
+  const THEMES = { green: { rgb: "0,255,65", hi: "#d8ffe4", a: "#00ff41", ink: "#c8ffd6", ink2: "#7fe79b", muted: "#3fae62", line: "#0f4a22", grid: "#08301a", hue: "75deg" },
+    red: { rgb: "255,59,59", hi: "#ffe0e0", a: "#ff3b3b", ink: "#ffd6d6", ink2: "#ff9a9a", muted: "#b04a4a", line: "#4a0f0f", grid: "#301010", hue: "-30deg" },
+    amber: { rgb: "255,176,0", hi: "#fff0cc", a: "#ffb000", ink: "#ffe8b8", ink2: "#ffcb5c", muted: "#b08020", line: "#4a3a0f", grid: "#302508", hue: "0deg" },
+    cyan: { rgb: "77,255,210", hi: "#dcfff6", a: "#4dffd2", ink: "#d0fff2", ink2: "#7fe9cf", muted: "#3fae94", line: "#0f4a40", grid: "#08302a", hue: "135deg" } };
+  function applyTheme(n) { const t = THEMES[n] || THEMES.green, st = root.style; TH.rgb = t.rgb; TH.hi = t.hi; st.setProperty("--accent", t.a); st.setProperty("--ink", t.ink); st.setProperty("--ink2", t.ink2); st.setProperty("--muted", t.muted); st.setProperty("--line", t.line); st.setProperty("--grid", t.grid); st.setProperty("--hue", t.hue); st.setProperty("--rep", t.a); try { localStorage.setItem("mx-theme", n); } catch (e) { /* none */ } $("mxTheme").value = THEMES[n] ? n : "green"; }
+
+  /* ---------- command line (display only: reads what the dashboard already knows) ---------- */
+  function out(txt, cls) { String(txt).split("\n").forEach((l) => termPush(l, cls || "out")); termDirty = true; }
+  const CMDS = {
+    help: () => out("commands:\n  help          this list\n  whoami        your alias and session\n  alias NAME    change your alias\n  status        link health, weather, radio vitals\n  nodes         every node this dashboard knows\n  top           busiest senders in the last hour\n  budget        radio link budget\n  weather       signal weather forecast\n  colour NAME   green | red | amber | cyan\n  rain on|off   falling code\n  export        save the intercept log\n  clear         clear this screen\n  intro         replay the splash\n  (nothing typed here is sent to the radio)"),
+    whoami: () => out("operator " + (MX.alias || "?") + "  session " + dur((Date.now() - SESS.t0) / 1000) + "  captured " + SESS.pk + " packets"),
+    alias: (a) => { if (a && setAlias(a)) out("alias is now " + MX.alias); else askAlias(false); },
+    status: () => { const H = health(), W = forecast(), d = MX.d; out("link health " + (S.frame ? H.v : "--") + "/100  weather " + W.k + (d ? "\nchip " + fmt(d.t, 1) + " C  heap " + fmt(d.hp / 1024, 0) + " kB  noise " + d.nf + " dBm  up " + upfmt(d.up) : "\nradio vitals: waiting for the radio")); },
+    nodes: () => { const rows = []; S.found && S.found.forEach((n) => rows.push((n.t === 2 ? "RPT " : n.t === 1 ? "CMP " : "ROOM") + " " + (n.n || n.k.slice(0, 8)).padEnd(22) + " " + n.k.slice(0, 8).toUpperCase() + "  " + (n.alat != null ? n.alat.toFixed(4) + "," + n.alon.toFixed(4) : "no position"))); out(rows.length ? rows.join("\n") : "no nodes known yet"); },
+    top: () => { const by = {}; recsNow().forEach((r) => { if (!r.tx && r.id && r.t > Date.now() - 3600000) by[r.id] = (by[r.id] || 0) + 1; }); const k = Object.keys(by).sort((a, b) => by[b] - by[a]).slice(0, 8); out(k.length ? k.map((x) => String(by[x]).padStart(4) + "  " + x.toUpperCase() + " " + meshNameFor(x)).join("\n") : "nothing heard yet"); },
+    budget: () => { const B = budget(MX.d); out(B ? "SF" + B.sf + " BW" + B.bwk + "k  " + Math.round(B.bitrate) + " bit/s  sensitivity " + fmt(B.sens, 0) + " dBm  budget " + fmt(B.bud, 0) + " dB  free-space range " + fmt(B.lKm, 0) + " km" : "waiting for the radio"); },
+    weather: () => { const W = forecast(); out(W.k + ": " + W.s); },
+    colour: (a) => { if (THEMES[a]) { applyTheme(a); out("colour " + a); } else out("green | red | amber | cyan", "err"); },
+    rain: (a) => { $("mxOptRain").checked = a !== "off"; $("mxOptRain").dispatchEvent(new Event("change")); out("falling code " + (a === "off" ? "off" : "on")); },
+    export: () => exportLog(), clear: () => { tl.length = 0; termDirty = true; }, intro: () => splash(),
+  };
+  CMDS.color = CMDS.colour;
+  function runCmd(line) { const t = line.trim(); if (!t) return; termPush((MX.alias || "?") + "@matrix> " + t, "tx"); const w = t.split(/\s+/), f = CMDS[w[0].toLowerCase()]; if (f) f(w.slice(1).join(" ").trim().toLowerCase() === w.slice(1).join(" ").trim() ? w.slice(1).join(" ") : w.slice(1).join(" ")); else out("unknown command: " + w[0] + "  (type help)", "err"); }
+  function exportLog() { const b = new Blob([tl.map((x) => x.txt).join("\n") + "\n"], { type: "text/plain" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "matrix-intercept-" + new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-") + ".txt"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+  const dur = (s) => { s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (h ? h + "h " : "") + m + "m " + (s % 60) + "s"; };
+
+  /* ---------- waterfall and topology ---------- */
+  function drawWaterfall() {
+    const c = cv("mxCvWf"), g = c.g, now = Date.now(), COLS = 120, STEP = 5000, ROWS = 12, lo = -130, hi = -50, rs = recsNow().filter((r) => !r.tx && r.t > now - COLS * STEP);
+    const grid2 = []; for (let i = 0; i < COLS; i++) grid2.push(new Array(ROWS).fill(0)); let mx = 1;
+    rs.forEach((r) => { const x = COLS - 1 - Math.floor((now - r.t) / STEP), y = Math.max(0, Math.min(ROWS - 1, Math.floor((r.rssi - lo) / (hi - lo) * ROWS))); if (x >= 0 && x < COLS) { grid2[x][y]++; if (grid2[x][y] > mx) mx = grid2[x][y]; } });
+    const cw = (c.w - 40) / COLS, rh = (c.h - 16) / ROWS; g.fillStyle = "#000"; g.fillRect(40, 0, c.w - 40, c.h - 16);
+    for (let x = 0; x < COLS; x++) for (let y = 0; y < ROWS; y++) { const v = grid2[x][y]; if (!v) continue; const a = 0.2 + 0.8 * v / mx; g.fillStyle = "rgba(" + TH.rgb + "," + a.toFixed(2) + ")"; g.fillRect(40 + x * cw, (ROWS - 1 - y) * rh, Math.ceil(cw), Math.ceil(rh) - 1); }
+    g.fillStyle = "#3fae62"; for (let y = 0; y <= 4; y++) g.fillText((hi - (hi - lo) * y / 4) + "", 0, y * (c.h - 16) / 4 + 10); g.fillText("-10 min", 40, c.h - 3); g.fillText("now", c.w - 26, c.h - 3);
+  }
+  function drawTopo() {
+    const c = cv("mxCvTopo"), g = c.g, now = Date.now(), cx = c.w / 2, cy = c.h / 2, R = Math.min(cx, cy) - 22, nodes = {};
+    recsNow().forEach((r) => { if (r.tx || !r.id || r.t < now - 3600000) return; const o = nodes[r.id] || (nodes[r.id] = { id: r.id, hop: 9, last: 0, n: 0, rssi: -130 }); o.hop = Math.min(o.hop, r.hops); o.last = Math.max(o.last, r.t); o.n++; o.rssi = Math.max(o.rssi, r.rssi); });
+    g.strokeStyle = "#0f4a22"; g.lineWidth = 1; [1, 2, 3].forEach((k) => { g.beginPath(); g.arc(cx, cy, R * k / 3, 0, 6.2832); g.stroke(); g.fillStyle = "#2e8a49"; g.fillText(k === 3 ? "3+ hops" : k - 1 === 0 ? "direct" : (k - 1) + " hop" + (k > 2 ? "s" : ""), cx + 4, cy - R * k / 3 + 12); });
+    const list = Object.keys(nodes).map((k) => nodes[k]).sort((a, b) => b.n - a.n).slice(0, 40);
+    list.forEach((o) => { let h = 0; for (let i = 0; i < o.id.length; i++) h = (h * 31 + o.id.charCodeAt(i)) >>> 0; const ang = (h % 3600) / 3600 * 6.2832, rr = R * (Math.min(o.hop, 2) + 0.55) / 3, x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang) * rr, age = (now - o.last) / 1000, hot = age < 10;
+      g.strokeStyle = hot ? "rgba(" + TH.rgb + ",.9)" : "rgba(" + TH.rgb + ",.18)"; g.lineWidth = hot ? 1.6 : 1; g.beginPath(); g.moveTo(cx, cy); g.lineTo(x, y); g.stroke();
+      g.fillStyle = hot ? "#fff" : "rgb(" + TH.rgb + ")"; g.shadowColor = "rgb(" + TH.rgb + ")"; g.shadowBlur = hot ? 12 : 4; g.beginPath(); g.arc(x, y, hot ? 5 : 3.5, 0, 6.2832); g.fill(); g.shadowBlur = 0;
+      const nm = meshNameFor(o.id) || o.id.toUpperCase(); g.fillStyle = "#9dffb4"; g.textAlign = x > cx ? "left" : "right"; g.fillText(nm.slice(0, 16), x + (x > cx ? 8 : -8), y + 4); g.textAlign = "left"; });
+    g.fillStyle = "#000"; g.strokeStyle = "rgb(" + TH.rgb + ")"; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 8, 0, 6.2832); g.fill(); g.stroke(); g.fillStyle = "rgb(" + TH.rgb + ")"; g.fillText(MX.alias || "YOU", cx + 12, cy + 4);
+    if (!list.length) { g.fillStyle = "#3fae62"; g.textAlign = "center"; g.fillText("nothing heard yet", cx, cy + 40); g.textAlign = "left"; }
+  }
+  function drawSession() { const now = Date.now(); $("mxOpSub").textContent = "access level: OPERATOR · link: " + (S.mode === "serial" ? "radio on USB" : S.mode === "demo" ? "sample data" : "offline");
+    kvset("mxSess", [["session time", dur((now - SESS.t0) / 1000)], ["packets captured", String(SESS.pk)], ["data captured", (SESS.bytes >= 1024 ? (SESS.bytes / 1024).toFixed(1) + " kB" : SESS.bytes + " B")], ["alerts raised", String(MX.alerts.length)], ["nodes discovered", S.found ? String(S.found.size) : "0"]]); }
 
   /* ---------- wiring ---------- */
   function onMx(line) { let o; try { o = JSON.parse(line).mx; } catch (e) { return; } if (!o) return; const prev = MX.d; MX.d = o; MX.lastMx = Date.now();
@@ -3110,7 +3188,14 @@ if (S.route.length || S.found.size) fitAll();
     set("mxOptRain", "rain", true); set("mxOptMap", "map", true); set("mxOptTrail", "trail", true); set("mxOptBeep", "beep", false);
     $("mxReplay").addEventListener("click", splash); $("mxTermClr").addEventListener("click", () => { tl.length = 0; termDirty = true; drawTerm(); }); $("mxTermF").addEventListener("change", () => { termDirty = true; });
     $("mxNote").textContent = "Display only. Nothing here sends anything to the radio. Link health, the forecast and the budget are estimates worked out in this page from what the radio reports.";
+    MX.alias = getAlias(); showAlias(); try { applyTheme(localStorage.getItem("mx-theme") || "green"); } catch (e) { applyTheme("green"); }
+    $("mxTheme").addEventListener("change", (e) => applyTheme(e.target.value)); $("mxExport").addEventListener("click", exportLog);
+    $("mxAliasBtn").addEventListener("click", () => askAlias(false));
+    $("mxAliasForm").addEventListener("submit", (e) => { e.preventDefault(); if (setAlias($("mxAliasIn").value)) $("mxAliasBox").hidden = true; });
+    $("mxAliasBox").addEventListener("keydown", (e) => { if (e.key === "Escape" && MX.alias) $("mxAliasBox").hidden = true; });
+    $("mxCmdForm").addEventListener("submit", (e) => { e.preventDefault(); const i = $("mxCmd"); runCmd(i.value); i.value = ""; });
     apply(); splash(); requestAnimationFrame(trailTick);
+    if (!MX.alias) { const w = setInterval(() => { if ($("mxSplash").style.display === "none") { clearInterval(w); askAlias(true); } }, 300); } else setTimeout(() => out("welcome back, " + MX.alias + ". type help.", "adv"), 500);
     setInterval(() => { try { pullRecs(); checkAlerts(); } catch (e) { /* keep going */ } }, 1000);
     setInterval(() => { try { draw(); } catch (e) { console.error(e); } }, 1500);
   });
