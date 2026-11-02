@@ -24,6 +24,10 @@ def build():
     sub("</head>", "<style id=\"matrix-css\">\n" + rd(d("addon", "matrix.css")) + "</style>\n<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap\">\n</head>")
     sub("<body>\n", "<body>\n" + rd(d("addon", "matrix.html")))
     sub('<span class="spacer"></span>\n    <button id="btnConnect"', '<span class="spacer"></span>\n    <span id="mxOpTag" class="status" style="gap:6px">operator <b id="mxOpName">?</b></span><button id="mxAliasBtn" type="button">Alias</button>\n    <button id="btnConnect"')
+    # the Matrix firmware reports edition "matrix": treat it as an ORION-class radio, and never offer it another product's firmware
+    sub('if (f.ed === "orion" && !S.orion) {', 'if (f.ed === "matrix" && !S.orion) S.orion = true;\n  if (f.ed === "orion" && !S.orion) {')
+    sub('if (S.frame && S.frame.ed !== "orion") msg =', 'if (S.frame && S.frame.ed !== "orion" && S.frame.ed !== "matrix") msg =')
+    sub('const product = (DASH_ID === "otr" || DASH_ID === "cairn") ? DASH_ID :', 'const product = (DASH_ID === "otr" || DASH_ID === "cairn" || DASH_ID === "matrix") ? DASH_ID :')
     sub("<!--TAC-HTML-END-->", rd(d("addon", "deck.html")) + "\n<!--TAC-HTML-END-->")
     i = h.rindex("</body>")
     h = h[:i] + "<script id=\"matrix-js\">\n" + rd(d("addon", "matrix.js")) + "</script>\n" + h[i:]

@@ -1452,6 +1452,7 @@ function onFrame(f, ts) {
   S.hist.push({ t: ts, best: f.links && f.links.length ? Math.max.apply(null, f.links.map((l) => l.sc)) : 0, bestId: f.best, scores });
   const cutoff = Date.now() - 15 * 60000; while (S.hist.length && S.hist[0].t < cutoff) S.hist.shift();
   $("btnSave").disabled = false;
+  if (f.ed === "matrix" && !S.orion) S.orion = true;
   if (f.ed === "orion" && !S.orion) { S.orion = true; document.title = "LODESTAR ORION dashboard"; document.querySelector(".brand").innerHTML = "LODESTAR ORION<small>wardriving dashboard</small>"; }
   if (addRoutePoint(f.gps, ts)) scheduleSave();
   render();
@@ -2617,7 +2618,7 @@ if (S.route.length || S.found.size) fitAll();
     if (S.mode === "off") { connectedAt = 0; return; } if (!connectedAt) connectedAt = Date.now();
     if (S.mode === "demo") return;
     let msg = "";
-    if (S.frame && S.frame.ed !== "orion") msg = "This is the ORION TACTICAL DASHBOARD. It is made for LODESTAR ORION firmware on a Heltec V4.3 R2 or V4 R8, but this radio reports a different firmware (" + String(S.frame.ed || "unknown").replace(/[^\w .-]/g, "").slice(0, 20) + "). Use the standard dashboard for it.";
+    if (S.frame && S.frame.ed !== "orion" && S.frame.ed !== "matrix") msg = "This is the ORION TACTICAL DASHBOARD. It is made for LODESTAR ORION firmware on a Heltec V4.3 R2 or V4 R8, but this radio reports a different firmware (" + String(S.frame.ed || "unknown").replace(/[^\w .-]/g, "").slice(0, 20) + "). Use the standard dashboard for it.";
     else if (S.frame && !MESH.seen && Date.now() - connectedAt > 25000) msg = "The Mesh Analyzer is not sending yet. It needs LODESTAR ORION with the Mesh Analyzer firmware. Contacts still show from the radio's contact list.";
     if (msg !== warned) { warned = msg; if (msg) notice(msg); else if ($("notice").textContent.indexOf("ORION TACTICAL") === 0 || $("notice").textContent.indexOf("The Mesh Analyzer is not") === 0) notice(""); }
   }
@@ -2878,7 +2879,7 @@ if (S.route.length || S.found.size) fitAll();
     let m;
     try { m = await getJson(RAW(FW_REPO, "latest.json")); }
     catch (e) { setMsg('<span class="big bad">Could not check</span>' + esc(e.message) + ". Check your internet connection and try again."); setActions([{ label: "Back", run: () => show("home") }, closeBtn]); return; }
-    const product = (DASH_ID === "otr" || DASH_ID === "cairn") ? DASH_ID : (f.ed === "orion" ? "orion" : "nova");
+    const product = (DASH_ID === "otr" || DASH_ID === "cairn" || DASH_ID === "matrix") ? DASH_ID : (f.ed === "orion" ? "orion" : "nova");
     const entry = m.products && m.products[product];
     const unit = f.unit === "mph" ? "mph" : "metric";
     const mine = ver(f.v), latest = entry && ver(entry.version);
