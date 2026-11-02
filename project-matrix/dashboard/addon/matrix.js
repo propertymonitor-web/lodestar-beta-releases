@@ -124,6 +124,7 @@
 
   /* ---------- tiles ---------- */
   function draw() {
+    const sel = window.getSelection && window.getSelection(); if (sel && !sel.isCollapsed && $("mxDeck").contains(sel.anchorNode) && !/^(INPUT|TEXTAREA)$/.test((sel.anchorNode.parentElement || {}).tagName || "")) return;   // do not redraw text while it is being selected for copying
     const now = Date.now(), f = S.frame, d = MX.d, rs = recsNow();
     // health
     const H = health(); $("mxHealth").textContent = f ? H.v : "--"; const hb = $("mxHealthBar"); hb.className = "bar" + (H.v < 30 ? " bad" : H.v < 55 ? " warn" : ""); hb.firstChild.style.width = (f ? H.v : 0) + "%";
@@ -167,6 +168,11 @@
     { const c = cv("mxCvCmp"), g = c.g, cx = c.w / 2, cy = c.h / 2, r = Math.min(cx, cy) - 14; g.strokeStyle = DIM; g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, r, 0, 6.2832); g.stroke(); g.fillStyle = "#3fae62"; g.textAlign = "center"; g.fillText("N", cx, cy - r - 3); g.fillText("S", cx, cy + r + 11); g.textAlign = "left";
       const gp = f && f.gps; if (gp && gp.fix) { const a = (gp.course || 0) * Math.PI / 180; g.strokeStyle = G; g.lineWidth = 2.5; g.shadowColor = G; g.shadowBlur = 8; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(a) * r * 0.9, cy - Math.cos(a) * r * 0.9); g.stroke(); g.shadowBlur = 0; }
       const t = f && f.trip || {}; kvset("mxMot", gp && gp.fix ? [["speed", (gp.spd != null ? gp.spd : gp.kmh) + " " + (f.unit || "km/h")], ["heading", (gp.course || 0) + "° " + ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round((gp.course || 0) / 45) % 8]], ["satellites", String(gp.sats)], ["position", gp.lat.toFixed(5) + ", " + gp.lon.toFixed(5)], ["trip", fmt(t.km, 2) + " km"], ["top speed", t.top != null ? t.top + "" : "--"]] : [["no GPS fix", "turn GPS on from the phone app or the GPS screen"]]); }
+    { const t = $("mxCvWx"); t.dataset.txt = "SNR dB per minute, last 30 min: " + W.series.map((v) => (v == null ? "-" : v.toFixed(1))).join(" ");
+      $("mxCvPulse").dataset.txt = "packets per minute, last 30 min\nheard: " + bucket(rs.filter((r) => !r.tx), now, 30).join(" ") + "\nsent: " + bucket(rs.filter((r) => r.tx), now, 30).join(" ");
+      $("mxCvHist").dataset.txt = "best repeater score history: " + S.hist.slice(-240).map((x) => x.best).join(" ");
+      $("mxCvAir").dataset.txt = "tx duty % / rx duty %:\n" + MX.air.slice(-120).map((x) => x.tx.toFixed(2) + " / " + x.rx.toFixed(2)).join("\n");
+      $("mxCvCmp").dataset.txt = f && f.gps && f.gps.fix ? "heading " + (f.gps.course || 0) + " deg" : ""; }
     drawWaterfall(); drawTopo(); drawSession();
     drawTerm();
   }
@@ -233,6 +239,7 @@
     recsNow().forEach((r) => { if (r.tx || !r.id || r.t < now - 3600000) return; const o = nodes[r.id] || (nodes[r.id] = { id: r.id, hop: 9, last: 0, n: 0, rssi: -130 }); o.hop = Math.min(o.hop, r.hops); o.last = Math.max(o.last, r.t); o.n++; o.rssi = Math.max(o.rssi, r.rssi); });
     g.strokeStyle = "#0f4a22"; g.lineWidth = 1; [1, 2, 3].forEach((k) => { g.beginPath(); g.arc(cx, cy, R * k / 3, 0, 6.2832); g.stroke(); g.fillStyle = "#2e8a49"; g.fillText(k === 3 ? "3+ hops" : k - 1 === 0 ? "direct" : (k - 1) + " hop" + (k > 2 ? "s" : ""), cx + 4, cy - R * k / 3 + 12); });
     const list = Object.keys(nodes).map((k) => nodes[k]).sort((a, b) => b.n - a.n).slice(0, 40);
+    c.g.canvas.dataset.txt = "node id, name, hops, packets, best dBm, seconds since heard\n" + list.map((o) => [o.id.toUpperCase(), meshNameFor(o.id) || "-", o.hop, o.n, o.rssi, Math.round((now - o.last) / 1000)].join(", ")).join("\n");
     list.forEach((o) => { let h = 0; for (let i = 0; i < o.id.length; i++) h = (h * 31 + o.id.charCodeAt(i)) >>> 0; const ang = (h % 3600) / 3600 * 6.2832, rr = R * (Math.min(o.hop, 2) + 0.55) / 3, x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang) * rr, age = (now - o.last) / 1000, hot = age < 10;
       g.strokeStyle = hot ? "rgba(" + TH.rgb + ",.9)" : "rgba(" + TH.rgb + ",.18)"; g.lineWidth = hot ? 1.6 : 1; g.beginPath(); g.moveTo(cx, cy); g.lineTo(x, y); g.stroke();
       g.fillStyle = hot ? "#fff" : "rgb(" + TH.rgb + ")"; g.shadowColor = "rgb(" + TH.rgb + ")"; g.shadowBlur = hot ? 12 : 4; g.beginPath(); g.arc(x, y, hot ? 5 : 3.5, 0, 6.2832); g.fill(); g.shadowBlur = 0;
@@ -243,6 +250,13 @@
   function drawSession() { const now = Date.now(); $("mxOpSub").textContent = "access level: OPERATOR · link: " + (S.mode === "serial" ? "radio on USB" : S.mode === "demo" ? "sample data" : "offline");
     kvset("mxSess", [["session time", dur((now - SESS.t0) / 1000)], ["packets captured", String(SESS.pk)], ["data captured", (SESS.bytes >= 1024 ? (SESS.bytes / 1024).toFixed(1) + " kB" : SESS.bytes + " B")], ["alerts raised", String(MX.alerts.length)], ["nodes discovered", S.found ? String(S.found.size) : "0"]]); }
 
+  function tileText(el) {      // plain text of a tile, one line per row; label: value for the two-column lists
+    if (el.classList && el.classList.contains("kv")) { const k = [...el.children], r = []; for (let i = 0; i + 1 < k.length; i += 2) r.push(k[i].textContent + ": " + k[i + 1].textContent); return r.join("\n"); }
+    if (el.classList && el.classList.contains("bar")) return "";
+    const kids = [...el.children]; if (!kids.length) return el.textContent.trim();
+    return kids.map(tileText).filter((x) => x).join("\n");
+  }
+  function fallbackCopy(txt, done) { const a = document.createElement("textarea"); a.value = txt; a.style.position = "fixed"; a.style.opacity = "0"; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); done(); } catch (e) { /* the text can still be selected by hand */ } a.remove(); }
   /* ---------- wiring ---------- */
   function onMx(line) { let o; try { o = JSON.parse(line).mx; } catch (e) { return; } if (!o) return; const prev = MX.d; MX.d = o; MX.lastMx = Date.now();
     if (prev && o.up > prev.up) { const dt = (o.up - prev.up) * 1000; MX.air.push({ tx: Math.max(0, 100 * (o.atx - prev.atx) / dt), rx: Math.max(0, 100 * (o.arx - prev.arx) / dt) }); if (MX.air.length > 400) MX.air.shift(); } }
@@ -269,6 +283,13 @@
     $("mxAliasForm").addEventListener("submit", (e) => { e.preventDefault(); if (setAlias($("mxAliasIn").value)) $("mxAliasBox").hidden = true; });
     $("mxAliasBox").addEventListener("keydown", (e) => { if (e.key === "Escape" && MX.alias) $("mxAliasBox").hidden = true; });
     $("mxCmdForm").addEventListener("submit", (e) => { e.preventDefault(); const i = $("mxCmd"); runCmd(i.value); i.value = ""; });
+    document.querySelectorAll("#mxDeck .mxt").forEach((t) => { const h = t.querySelector("h3"); if (!h) return; const b = document.createElement("button"); b.type = "button"; b.className = "cp"; b.textContent = "copy"; b.title = "Copy this tile's data as text";
+      b.addEventListener("click", () => { let txt = (h.firstChild ? h.firstChild.textContent : "") + " (" + new Date().toISOString() + ", " + (MX.alias || "?") + ")\n"; const own = t.cloneNode(true); own.querySelectorAll("h3, canvas, button, input, select, label").forEach((e) => e.remove());
+        txt += (t.id === "mxAlerts" ? MX.alerts.map((a) => hhmmss(a.t) + " " + a.text).join("\n") : t.querySelector("#mxTerm") ? tl.map((x) => x.txt).join("\n") : tileText(own));
+        t.querySelectorAll("canvas").forEach((c) => { if (c.dataset.txt) txt += "\n" + c.dataset.txt; });
+        const done = () => { b.textContent = "copied"; setTimeout(() => { b.textContent = "copy"; }, 1200); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done)); else fallbackCopy(txt, done); });
+      h.appendChild(b); });
     apply(); splash(); requestAnimationFrame(trailTick);
     if (!MX.alias) { const w = setInterval(() => { if ($("mxSplash").style.display === "none") { clearInterval(w); askAlias(true); } }, 300); } else setTimeout(() => out("welcome back, " + MX.alias + ". type help.", "adv"), 500);
     setInterval(() => { try { pullRecs(); checkAlerts(); } catch (e) { /* keep going */ } }, 1000);

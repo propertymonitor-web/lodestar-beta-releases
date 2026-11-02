@@ -76,3 +76,6 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
 #mxPrompt{ font-weight: 700; }
 #mxCmd{ background: #000; color: var(--accent); border: 1px solid var(--line); padding: 6px 8px; font: 13px var(--mono); }
 #mxTerm .out{ color: #9dffb4; } #mxTerm .err{ color: var(--bad); }
+#mxDeck, #mxDeck *{ -webkit-user-select: text; user-select: text; }
+#mxDeck .mxt h3 .cp{ float: right; padding: 0 8px; font-size: 11px; letter-spacing: .06em; text-transform: none; cursor: pointer; }
+#mxDeck button, #mxDeck select, #mxDeck input{ -webkit-user-select: auto; user-select: auto; }
