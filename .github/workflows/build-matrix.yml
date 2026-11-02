@@ -97,7 +97,7 @@ jobs:
           B=mc/.pio/build/"$PIO_ENV"
           WANT="0.1.0-matrix"; [ "$UNITS" = mph ] && WANT="0.1.0-matrix-mph"
           strings -n 5 "$B/firmware.bin" | grep -q -x -F "$WANT" || { echo "::error::version marker $WANT is missing from the build"; exit 1; }
-          strings -n 5 "$B/firmware.bin" | grep -q -F "Matrix Comm" || { echo "::error::boot screen text missing from the build"; exit 1; }
+          for T in "By: Aries Thorne" "Comm. Systems"; do strings -n 5 "$B/firmware.bin" | grep -q -F "$T" || { echo "::error::boot screen text missing from the build: $T"; exit 1; }; done
           echo "version marker and boot text found"
 
       - name: Collect output
