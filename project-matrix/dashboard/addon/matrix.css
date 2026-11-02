@@ -81,3 +81,8 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
 #mxDeck button, #mxDeck select, #mxDeck input{ -webkit-user-select: auto; user-select: auto; }
 #mxCvTopo{ cursor: pointer; } #mxTalk .kv, #mxTalk .bar{ cursor: pointer; } #mxTalk .kv:hover span{ color: var(--accent); }
 #mxNodeBody .path{ font: 14px var(--mono); color: var(--accent); margin: 6px 0; word-break: break-word; } #mxNodeBody table{ border-collapse: collapse; font: 12.5px var(--mono); margin-top: 6px; } #mxNodeBody td, #mxNodeBody th{ padding: 2px 10px 2px 0; text-align: left; font-weight: 400; } #mxNodeBody th{ color: var(--muted); }
+#mxMenu{ position: fixed; z-index: 8600; background: #000; border: 1px solid var(--accent); box-shadow: 0 0 22px rgba(0,255,65,.4); min-width: 170px; padding: 4px; }
+#mxMenu[hidden]{ display: none; } #mxMenu .mh{ color: var(--muted); font: 12px var(--mono); letter-spacing: .1em; padding: 4px 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+#mxMenu button{ display: block; width: 100%; text-align: left; margin: 2px 0; background: transparent; border: 0; color: var(--ink); padding: 8px 10px; font: 14px var(--mono); letter-spacing: .08em; cursor: pointer; }
+#mxMenu button:hover{ background: rgba(0,255,65,.14); color: var(--accent); } #mxMenu button[data-act="block"]:hover{ color: var(--bad); }
+#mxNodeBody .kv{ grid-template-columns: minmax(150px, 34%) 1fr; } #mxNodeBody .kv b{ text-align: left; word-break: break-word; }

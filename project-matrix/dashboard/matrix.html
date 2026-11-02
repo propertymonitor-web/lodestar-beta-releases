@@ -1060,6 +1060,11 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
 #mxDeck button, #mxDeck select, #mxDeck input{ -webkit-user-select: auto; user-select: auto; }
 #mxCvTopo{ cursor: pointer; } #mxTalk .kv, #mxTalk .bar{ cursor: pointer; } #mxTalk .kv:hover span{ color: var(--accent); }
 #mxNodeBody .path{ font: 14px var(--mono); color: var(--accent); margin: 6px 0; word-break: break-word; } #mxNodeBody table{ border-collapse: collapse; font: 12.5px var(--mono); margin-top: 6px; } #mxNodeBody td, #mxNodeBody th{ padding: 2px 10px 2px 0; text-align: left; font-weight: 400; } #mxNodeBody th{ color: var(--muted); }
+#mxMenu{ position: fixed; z-index: 8600; background: #000; border: 1px solid var(--accent); box-shadow: 0 0 22px rgba(0,255,65,.4); min-width: 170px; padding: 4px; }
+#mxMenu[hidden]{ display: none; } #mxMenu .mh{ color: var(--muted); font: 12px var(--mono); letter-spacing: .1em; padding: 4px 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+#mxMenu button{ display: block; width: 100%; text-align: left; margin: 2px 0; background: transparent; border: 0; color: var(--ink); padding: 8px 10px; font: 14px var(--mono); letter-spacing: .08em; cursor: pointer; }
+#mxMenu button:hover{ background: rgba(0,255,65,.14); color: var(--accent); } #mxMenu button[data-act="block"]:hover{ color: var(--bad); }
+#mxNodeBody .kv{ grid-template-columns: minmax(150px, 34%) 1fr; } #mxNodeBody .kv b{ text-align: left; word-break: break-word; }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap">
 </head>
@@ -1072,6 +1077,7 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
 <canvas id="mxRainCv" style="display:none"></canvas>
 <div id="mxFlash"></div>
 <div id="mxAliasBox" hidden role="dialog" aria-label="Choose your alias"><form id="mxAliasForm"><div class="al1">IDENTIFY YOURSELF, OPERATOR</div><input id="mxAliasIn" maxlength="24" autocomplete="off" spellcheck="false" placeholder="enter alias" aria-label="Alias"><div class="al2">Saved in this browser only. Letters, numbers, - and _ . Change it any time with the Alias button.</div><button class="primary" type="submit">Jack in</button></form></div>
+<div id="mxMenu" hidden role="menu"><div class="mh"></div><button type="button" role="menuitem" data-act="block">Block Source</button><button type="button" role="menuitem" data-act="decode">Decode Source</button><button type="button" role="menuitem" data-act="hack">Hack Source</button></div>
 <div class="wrap">
   <header class="bar">
     <h1 class="brand">PROJECT MATRIX<small>By: Aries Thorne &middot; For: Matrix Comm. Systems</small></h1>
@@ -1121,7 +1127,8 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
     <div class="mxt wide"><h3>Operator <small>this session</small></h3><div class="big" id="mxOp">--</div><div class="sub" id="mxOpSub"></div><div class="kv" id="mxSess"></div></div>
     <div class="mxt wide"><h3>Spectrum waterfall <small>signal strength of every packet heard, last 10 min</small></h3><canvas id="mxCvWf" height="140"></canvas><div class="sub" id="mxWfSub">bright = many packets at that signal level</div></div>
     <div class="mxt wide"><h3>Mesh topology <small>who you hear, by hops away</small></h3><canvas id="mxCvTopo" height="300"></canvas></div>
-    <div class="mxt wide" id="mxNode"><h3>Node detail <small>click a node in the topology, top talkers or radar list</small></h3><div id="mxNodeBody"><div class="sub">nothing selected yet</div></div></div>
+    <div class="mxt wide" id="mxNode"><h3>Node detail <small>click a node in the topology, top talkers or radar list for a menu</small></h3><div id="mxNodeBody"><div class="sub">nothing selected yet</div></div></div>
+    <div class="mxt" id="mxBlock"><h3>Blocked sources <small>hidden from this dashboard only</small></h3><div id="mxBlockBody"></div></div>
     <div class="mxt"><h3>Link health <small>0-100</small></h3><div class="big" id="mxHealth">--</div><div class="sub" id="mxHealthSub">waiting for data</div>
       <div class="bar" id="mxHealthBar"><i style="width:0"></i></div><div class="kv" id="mxHealthKv"></div></div>
     <div class="mxt"><h3>Signal weather</h3><div class="fc ok" id="mxFc">STANDBY</div><div class="sub" id="mxFcSub">needs a few minutes of packets</div><canvas id="mxCvWx" height="90"></canvas></div>
@@ -3139,7 +3146,7 @@ if (S.route.length || S.found.size) fitAll();
   /* ---------- command line (display only: reads what the dashboard already knows) ---------- */
   function out(txt, cls) { String(txt).split("\n").forEach((l) => termPush(l, cls || "out")); termDirty = true; }
   const CMDS = {
-    help: () => out("commands:\n  help          this list\n  whoami        your alias and session\n  alias NAME    change your alias\n  status        link health, weather, radio vitals\n  nodes         every node this dashboard knows\n  node NAME     hops and path for one node (or click it)\n  top           busiest senders in the last hour\n  budget        radio link budget\n  weather       signal weather forecast\n  colour NAME   green | red | amber | cyan\n  rain on|off   falling code\n  export        save the intercept log\n  clear         clear this screen\n  intro         replay the splash\n  (nothing typed here is sent to the radio)"),
+    help: () => out("commands:\n  help          this list\n  whoami        your alias and session\n  alias NAME    change your alias\n  status        link health, weather, radio vitals\n  nodes         every node this dashboard knows\n  decode NAME   hops and path for one node (or click a node)\n  hack NAME     full file on a node: path, signal, position, history\n  block NAME    stop reporting a node (unblock NAME to undo)\n  blocklist     what is blocked\n  top           busiest senders in the last hour\n  budget        radio link budget\n  weather       signal weather forecast\n  colour NAME   green | red | amber | cyan\n  rain on|off   falling code\n  export        save the intercept log\n  clear         clear this screen\n  intro         replay the splash\n  (nothing typed here is sent to the radio)"),
     whoami: () => out("operator " + (MX.alias || "?") + "  session " + dur((Date.now() - SESS.t0) / 1000) + "  captured " + SESS.pk + " packets"),
     alias: (a) => { if (a && setAlias(a)) out("alias is now " + MX.alias); else askAlias(false); },
     status: () => { const H = health(), W = forecast(), d = MX.d; out("link health " + (S.frame ? H.v : "--") + "/100  weather " + W.k + (d ? "\nchip " + fmt(d.t, 1) + " C  heap " + fmt(d.hp / 1024, 0) + " kB  noise " + d.nf + " dBm  up " + upfmt(d.up) : "\nradio vitals: waiting for the radio")); },
@@ -3149,6 +3156,11 @@ if (S.route.length || S.found.size) fitAll();
     weather: () => { const W = forecast(); out(W.k + ": " + W.s); },
     colour: (a) => { if (THEMES[a]) { applyTheme(a); out("colour " + a); } else out("green | red | amber | cyan", "err"); },
     rain: (a) => { $("mxOptRain").checked = a !== "off"; $("mxOptRain").dispatchEvent(new Event("change")); out("falling code " + (a === "off" ? "off" : "on")); },
+    decode: (a) => { if (!a) out("usage: decode NAME or ID", "err"); else selectNode(normId(a), "decode"); },
+    hack: (a) => { if (!a) out("usage: hack NAME or ID", "err"); else { out("scanning " + normId(a).toUpperCase() + " ..."); selectNode(normId(a), "hack"); } },
+    block: (a) => { if (!a) out("usage: block NAME or ID", "err"); else { const i = normId(a); blockNode(i, meshNameFor(i)); } },
+    unblock: (a) => { const i = normId(a); if (MX.block[i]) unblockNode(i); else out("not blocked: " + a, "err"); },
+    blocklist: () => out(Object.keys(MX.block).length ? Object.keys(MX.block).map((k) => k.toUpperCase() + " " + MX.block[k]).join("\n") : "nothing blocked"),
     node: (a) => { if (!a) out("usage: node NAME or ID", "err"); else { selectNode(normId(a)); out("node detail: " + normId(a).toUpperCase() + " (see the Node detail tile)"); } },
     export: () => exportLog(), clear: () => { tl.length = 0; termDirty = true; }, intro: () => splash(),
   };
@@ -3160,25 +3172,64 @@ if (S.route.length || S.found.size) fitAll();
 
   /* ---------- node detail: hops and path, from what the radio reports ---------- */
   function normId(v) { v = String(v || "").trim().toLowerCase(); const m = Object.keys(MX.known || {}).find((k) => k === v || k.startsWith(v)); if (m) return m; let hit = null; S.found && S.found.forEach((n) => { if (!hit && (n.k.toLowerCase().startsWith(v) || (n.n && n.n.toLowerCase().indexOf(v) >= 0))) hit = n.k.toLowerCase().slice(0, 6); }); return hit || v.slice(0, 6); }
-  function selectNode(id) { MX.sel = id; drawNode(); try { $("mxNode").scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) { /* none */ } }
+  /* ---- block list: the dashboard stops reporting these (the radio itself is untouched) ---- */
+  MX.block = (() => { try { return JSON.parse(localStorage.getItem("mx-block") || "{}") || {}; } catch (e) { return {}; } })(); MX.stash = {};
+  const isBlocked = (id) => !!id && !!MX.block[String(id).toLowerCase().slice(0, 6)];
+  const saveBlock = () => { try { localStorage.setItem("mx-block", JSON.stringify(MX.block)); } catch (e) { /* kept for this visit only */ } };
+  function purge() {      // take blocked nodes out of everything the dashboard shows; keep them aside so Unblock can bring them back
+    const rs = MESH.recs; for (let i = rs.length - 1; i >= 0; i--) if (isBlocked(rs[i].id) || isBlocked(rs[i].src)) rs.splice(i, 1);
+    if (S.found) [...S.found.keys()].forEach((k) => { if (isBlocked(k)) { MX.stash[k] = S.found.get(k); S.found.delete(k); } });
+    try { rebuildNodeLayers(); renderFoundPanel(); } catch (e) { /* not ready */ } MESH.dirty = true; }
+  function blockNode(id, name) { id = id.slice(0, 6); MX.block[id] = name || id.toUpperCase(); saveBlock(); purge(); if (MX.sel === id) { MX.sel = null; $("mxNodeBody").innerHTML = '<div class="sub">nothing selected yet</div>'; } termPush("BLOCKED source " + id.toUpperCase() + (name ? " (" + name + ")" : "") + ": no longer reported by this dashboard", "adv"); drawBlock(); }
+  function unblockNode(id) { delete MX.block[id]; saveBlock(); Object.keys(MX.stash).forEach((k) => { if (k.toLowerCase().slice(0, 6) === id) { S.found.set(k, MX.stash[k]); delete MX.stash[k]; } }); try { rebuildNodeLayers(); renderFoundPanel(); } catch (e) { /* none */ } termPush("unblocked source " + id.toUpperCase(), "adv"); drawBlock(); }
+  function drawBlock() { const k = Object.keys(MX.block), el = $("mxBlockBody"); el.innerHTML = k.length ? k.map((x) => '<div class="kv"><span>' + esc(MX.block[x]) + " " + esc(x.toUpperCase()) + '</span><b><button type="button" data-unb="' + esc(x) + '">unblock</button></b></div>').join("") : '<div class="sub">nothing blocked</div>'; $("mxBlock").dataset.txt = k.map((x) => x.toUpperCase() + " " + MX.block[x]).join("\n"); }
+  const _onFound = window.onFound; window.onFound = onFound = function (f, ts) { if (f && isBlocked(String(f.k).toLowerCase())) return; return _onFound(f, ts); };
+  const _onMesh = window.onMeshLine; window.onMeshLine = onMeshLine = function (line) { const r = _onMesh(line); if (Object.keys(MX.block).length) purge(); return r; };
+
+  /* ---- the menu next to a clicked node ---- */
+  function openMenu(id, x, y) {
+    id = id.toLowerCase().slice(0, 6); const m = $("mxMenu"), nm = meshNameFor(id); m.dataset.id = id; m.querySelector(".mh").textContent = (nm || id.toUpperCase());
+    m.hidden = false; const w = m.offsetWidth, h = m.offsetHeight; m.style.left = Math.max(4, Math.min(x + 8, innerWidth - w - 4)) + "px"; m.style.top = Math.max(4, Math.min(y + 8, innerHeight - h - 4)) + "px"; }
+  const closeMenu = () => { $("mxMenu").hidden = true; };
+  function selectNode(id, mode) { MX.sel = id; MX.mode = mode || "decode"; MX.scanId = (MX.scanId || 0) + 1; if (MX.mode === "hack") scan(id, MX.scanId); else drawNode(); try { $("mxNode").scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) { /* none */ } }
+  function scan(id, n) {
+    const el = $("mxNodeBody"), steps = ["resolving source " + id.toUpperCase() + " ...", "reading adverts heard from it ...", "reading signal history ...", "reading position and name it announced ...", "checking for telemetry ...", "building the file ..."]; MX.scanning = true; let i = 0;
+    (function tick() { if (MX.scanId !== n) return; if (i < steps.length) { el.innerHTML = '<div class="path" style="white-space:pre">' + esc(steps.slice(0, i + 1).join("\n")) + "</div>"; i++; setTimeout(tick, 260); } else { MX.scanning = false; drawNode(); } })(); }
+  const median = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
   function drawNode() {
-    const el = $("mxNodeBody"), id = MX.sel; if (!id) return; const now = Date.now(), rs = recsNow(), nm = meshNameFor(id);
-    const via = rs.filter((r) => !r.tx && r.id === id), orig = rs.filter((r) => !r.tx && r.src === id && r.src !== r.id), own = rs.filter((r) => !r.tx && (r.id === id && (!r.src || r.src === id)));
+    if (MX.scanning) return; const el = $("mxNodeBody"), id = MX.sel; if (!id) return; const now = Date.now(), rs = recsNow(), nm = meshNameFor(id), hack = MX.mode === "hack";
+    const via = rs.filter((r) => !r.tx && r.id === id), orig = rs.filter((r) => !r.tx && r.src === id && r.src !== r.id), all = via.concat(orig).sort((a, b) => a.t - b.t);
     const known = S.found && [...S.found.values()].find((n) => n.k.toLowerCase().startsWith(id)), f = S.frame, me = f && f.gps && f.gps.fix ? [f.gps.lat, f.gps.lon] : null;
     const hops = via.map((r) => r.hops), mn = hops.length ? Math.min.apply(null, hops) : null, mxh = hops.length ? Math.max.apply(null, hops) : null, avg = hops.length ? hops.reduce((a, b) => a + b, 0) / hops.length : null;
-    let h = '<div class="big">' + esc(nm || id.toUpperCase()) + '</div><div class="sub">id ' + esc(id.toUpperCase()) + (known ? " &middot; " + (known.t === 2 ? "repeater" : known.t === 1 ? "companion" : "room server") : "") + "</div>";
-    if (!via.length && !orig.length) { h += '<div class="sub">no packets from this node in the intercept history yet</div>'; el.innerHTML = h; return; }
-    const lastR = via.concat(orig).reduce((a, r) => (r.t > a ? r.t : a), 0);
-    let path;
-    if (mn === 0) path = esc(MX.alias || "YOU") + " &larr; " + esc(nm || id.toUpperCase()) + "  (heard directly, 0 hops)";
-    else { const n1 = mn; path = esc(MX.alias || "YOU") + " &larr; [" + esc(nm || id.toUpperCase()) + " relay] &larr; " + (n1 > 1 ? "(" + (n1 - 1) + " more relay" + (n1 > 2 ? "s" : "") + " not reported) &larr; " : "") + "origin  (" + n1 + " hop" + (n1 > 1 ? "s" : "") + ")"; }
+    const who = esc(nm || id.toUpperCase()), tag = hack ? "HACK SOURCE" : "DECODE SOURCE";
+    let h = '<div class="sub" style="color:var(--muted)">' + tag + '</div><div class="big">' + who + '</div><div class="sub">id ' + esc(id.toUpperCase()) + (known ? " &middot; " + (known.t === 2 ? "repeater" : known.t === 1 ? "companion" : "room server") : "") + "</div>";
+    if (!all.length && !known) { h += '<div class="sub">nothing heard from this node in the intercept history yet</div>'; el.innerHTML = h; $("mxNode").dataset.txt = el.innerText; return; }
+    const lastR = all.length ? all[all.length - 1].t : 0, firstR = all.length ? all[0].t : 0;
+    let path; if (mn === 0) path = esc(MX.alias || "YOU") + " &larr; " + who + "  (heard directly, 0 hops)"; else if (mn == null) path = "no packet from it has passed through this radio yet"; else path = esc(MX.alias || "YOU") + " &larr; [" + who + " relay] &larr; " + (mn > 1 ? "(" + (mn - 1) + " more relay" + (mn > 2 ? "s" : "") + " not reported) &larr; " : "") + "origin  (" + mn + " hop" + (mn > 1 ? "s" : "") + ")";
     h += '<div class="path">' + path + "</div>";
-    const rows = [["packets heard from it as last relay", via.length], ["hops (best / typical / worst)", hops.length ? mn + " / " + avg.toFixed(1) + " / " + mxh : "--"], ["strongest signal", via.length ? Math.max.apply(null, via.map((r) => r.rssi)) + " dBm" : "--"], ["best SNR", via.length ? Math.max.apply(null, via.map((r) => r.snr)).toFixed(1) + " dB" : "--"], ["last heard", lastR ? Math.round((now - lastR) / 1000) + " s ago" : "--"]];
-    if (known && known.alat != null) { rows.push(["position", known.alat.toFixed(5) + ", " + known.alon.toFixed(5)]); if (me) rows.push(["distance from you", (meters(me, [known.alat, known.alon]) / 1000).toFixed(2) + " km"]); }
-    h += '<div class="kv">' + rows.map((r) => "<span>" + esc(r[0]) + "</span><b>" + esc(String(r[1])) + "</b>").join("") + "</div>";
-    if (orig.length) { const by = {}; orig.forEach((r) => { const k = r.id + "|" + r.hops; by[k] = (by[k] || 0) + 1; });
-      h += '<div class="sub" style="margin-top:8px">packets that this node originated, and the last relay each came through</div><table><tr><th>last relay</th><th>hops</th><th>packets</th></tr>' + Object.keys(by).sort((a, b) => by[b] - by[a]).slice(0, 8).map((k) => { const p = k.split("|"); return "<tr><td>" + esc((meshNameFor(p[0]) || "") + " " + p[0].toUpperCase()) + "</td><td>" + p[1] + "</td><td>" + by[k] + "</td></tr>"; }).join("") + "</table>"; }
-    h += '<div class="sub" style="margin-top:8px;color:var(--muted)">The radio reports how many hops a packet took and the last relay it came through, not the full route, so the hops between are shown as unknown.</div>';
+    const rows = [["hops (best / typical / worst)", hops.length ? mn + " / " + avg.toFixed(1) + " / " + mxh : "--"]];
+    if (orig.length) { const by = {}; orig.forEach((r) => { const k = r.id + "|" + r.hops; by[k] = (by[k] || 0) + 1; }); h += '<div class="kv">' + rows.map((r) => "<span>" + esc(r[0]) + "</span><b>" + esc(String(r[1])) + "</b>").join("") + "</div>";
+      h += '<div class="sub" style="margin-top:8px">packets this node originated, by the last relay they came through</div><table><tr><th>last relay</th><th>hops</th><th>packets</th></tr>' + Object.keys(by).sort((a, b) => by[b] - by[a]).slice(0, 8).map((k) => { const p = k.split("|"); return "<tr><td>" + esc((meshNameFor(p[0]) || "") + " " + p[0].toUpperCase()) + "</td><td>" + p[1] + "</td><td>" + by[k] + "</td></tr>"; }).join("") + "</table>"; }
+    else h += '<div class="kv">' + rows.map((r) => "<span>" + esc(r[0]) + "</span><b>" + esc(String(r[1])) + "</b>").join("") + "</div>";
+    if (hack) {
+      const R = [], rx = via.length ? via : all;
+      R.push(["type", known ? (known.t === 2 ? "repeater" : known.t === 1 ? "companion" : known.t === 3 ? "room server" : "node") : "not announced yet"]);
+      R.push(["name it announced", known && known.n ? known.n : "none"]);
+      R.push(["full id", known ? known.k.toUpperCase() : id.toUpperCase() + " (partial)"]);
+      R.push(["first / last heard", (firstR ? hhmmss(firstR) : "--") + " / " + (lastR ? hhmmss(lastR) : "--")]);
+      R.push(["packets seen", all.length + " (" + via.length + " relayed by it, " + orig.length + " originated by it)"]);
+      if (rx.length) { const rs2 = rx.map((r) => r.rssi), sn = rx.map((r) => r.snr); R.push(["signal RSSI (best / avg / worst)", Math.max.apply(null, rs2) + " / " + Math.round(rs2.reduce((a, b) => a + b, 0) / rs2.length) + " / " + Math.min.apply(null, rs2) + " dBm"]); R.push(["SNR (best / avg)", Math.max.apply(null, sn).toFixed(1) + " / " + (sn.reduce((a, b) => a + b, 0) / sn.length).toFixed(1) + " dB"]);
+        const mb = budget(MX.d); if (mb && mn === 0) { const best = Math.max.apply(null, rs2); R.push(["range from signal alone (rough)", (Math.pow(10, (mb.txp - best - 32.44 - 20 * Math.log10(mb.f)) / 20)).toFixed(2) + " km, if it transmits at " + mb.txp + " dBm in the open"]); } }
+      const adv = all.filter((r) => r.type === 4).map((r) => r.t); if (adv.length > 2) { const gaps = []; for (let i = 1; i < adv.length; i++) gaps.push((adv[i] - adv[i - 1]) / 1000); R.push(["advert interval", Math.round(median(gaps)) + " s typical (" + adv.length + " adverts)"]); } else R.push(["adverts heard", String(adv.length)]);
+      const ty = {}; all.forEach((r) => { const k = MTYPE[r.type]; ty[k] = (ty[k] || 0) + 1; }); R.push(["what it sends", Object.keys(ty).sort((a, b) => ty[b] - ty[a]).map((k) => k + " " + ty[k]).join(", ") || "--"]);
+      if (known && known.alat != null) { R.push(["GPS position it announced", known.alat.toFixed(6) + ", " + known.alon.toFixed(6)]); if (me) { const mm = meters(me, [known.alat, known.alon]); let br = Math.atan2((known.alon - me[1]) * Math.cos(me[0] * Math.PI / 180), known.alat - me[0]) * 180 / Math.PI; if (br < 0) br += 360; R.push(["distance and bearing from you", (mm / 1000).toFixed(2) + " km at " + Math.round(br) + "\u00b0"]); } R.push(["map link", "https://www.openstreetmap.org/?mlat=" + known.alat.toFixed(6) + "&mlon=" + known.alon.toFixed(6) + "#map=16/" + known.alat.toFixed(5) + "/" + known.alon.toFixed(5)]); }
+      else R.push(["GPS position", known ? "not announced (it keeps its location private or has no GPS)" : "unknown"]);
+      if (known && known.hlat != null) R.push(["where you were when first heard", known.hlat.toFixed(5) + ", " + known.hlon.toFixed(5)]);
+      R.push(["telemetry", "none received (this dashboard only sees what the radio reports; no sensor data is broadcast to it)"]);
+      h += '<div class="sub" style="margin-top:8px;color:var(--accent)">FILE</div><div class="kv">' + R.map((r) => "<span>" + esc(r[0]) + "</span><b>" + esc(String(r[1])) + "</b>").join("") + "</div>";
+      const c = rx.slice(-40).map((r) => r.rssi); if (c.length > 2) h += '<div class="sub" style="margin-top:8px">signal over its last ' + c.length + " packets (dBm): " + c.join(" ") + "</div>";
+    }
+    h += '<div class="sub" style="margin-top:8px;color:var(--muted)">' + (hack ? "Everything here was heard over the air or announced by the node itself. Nothing is sent to it and nothing is taken from it. " : "") + "The radio reports the hop count and the last relay, not the full route, so in-between hops show as unknown.</div>";
     el.innerHTML = h; $("mxNode").dataset.txt = el.innerText;
   }
 
@@ -3238,9 +3289,12 @@ if (S.route.length || S.found.size) fitAll();
     $("mxNote").textContent = "Display only. Nothing here sends anything to the radio. Link health, the forecast and the budget are estimates worked out in this page from what the radio reports.";
     MX.alias = getAlias(); showAlias(); try { applyTheme(localStorage.getItem("mx-theme") || "green"); } catch (e) { applyTheme("green"); }
     $("mxTheme").addEventListener("change", (e) => applyTheme(e.target.value)); $("mxExport").addEventListener("click", exportLog);
-    $("mxCvTopo").addEventListener("click", (e) => { const r = e.target.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 18; (MX.topoHit || []).forEach((h) => { const dd = Math.hypot(h.x - x, h.y - y); if (dd < bd) { bd = dd; best = h; } }); if (best) selectNode(best.id); });
-    $("mxTalk").addEventListener("click", (e) => { const r = e.target.closest("[data-id]") || (e.target.classList.contains("bar") || (e.target.parentElement && e.target.parentElement.classList.contains("bar")) ? (e.target.closest(".bar") || e.target).previousElementSibling : null); if (r && r.dataset.id) selectNode(r.dataset.id); });
-    $("radarList") && $("radarList").addEventListener("click", (e) => { const row = e.target.closest("[data-k]"); if (row) selectNode(row.dataset.k.toLowerCase().slice(0, 6)); });
+    $("mxCvTopo").addEventListener("click", (e) => { const r = e.target.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 18; (MX.topoHit || []).forEach((h) => { const dd = Math.hypot(h.x - x, h.y - y); if (dd < bd) { bd = dd; best = h; } }); if (best) openMenu(best.id, e.clientX, e.clientY); });
+    $("mxTalk").addEventListener("click", (e) => { const r = e.target.closest("[data-id]") || (e.target.classList.contains("bar") || (e.target.parentElement && e.target.parentElement.classList.contains("bar")) ? (e.target.closest(".bar") || e.target).previousElementSibling : null); if (r && r.dataset.id) openMenu(r.dataset.id, e.clientX, e.clientY); });
+    $("radarList") && $("radarList").addEventListener("click", (e) => { const row = e.target.closest("[data-k]"); if (row) openMenu(row.dataset.k.toLowerCase().slice(0, 6), e.clientX, e.clientY); });
+    $("mxMenu").addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (!b) return; const id = $("mxMenu").dataset.id; closeMenu(); if (b.dataset.act === "block") blockNode(id, meshNameFor(id)); else selectNode(id, b.dataset.act); });
+    document.addEventListener("click", (e) => { if (!$("mxMenu").hidden && !e.target.closest("#mxMenu") && !e.target.closest("#mxCvTopo, #mxTalk, #radarList")) closeMenu(); }); document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+    $("mxBlockBody").addEventListener("click", (e) => { const u = e.target.closest("[data-unb]"); if (u) unblockNode(u.dataset.unb); }); drawBlock(); purge();
     $("mxAliasBtn").addEventListener("click", () => askAlias(false));
     $("mxAliasForm").addEventListener("submit", (e) => { e.preventDefault(); if (setAlias($("mxAliasIn").value)) $("mxAliasBox").hidden = true; });
     $("mxAliasBox").addEventListener("keydown", (e) => { if (e.key === "Escape" && MX.alias) $("mxAliasBox").hidden = true; });
