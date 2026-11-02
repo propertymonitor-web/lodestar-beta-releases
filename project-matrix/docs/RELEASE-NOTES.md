@@ -5,7 +5,7 @@ PROJECT MATRIX. By: Aries Thorne. For: Matrix Comm. Systems.
 A companion radio firmware with a Matrix-style dashboard. **Beta 1. Not yet tested on a real radio.**
 
 ## Download
-Get **`LODESTAR-MATRIX-PROJECT-beta.zip`**. It holds the User's Manual (PDF), a Quick Start Guide, a README, the dashboard (`matrix.html`) and the firmware.
+Get **`LODESTAR-MATRIX-PROJECT-Heltec-V4-R2-beta.zip`** (or the R8 or V3 zip, both untested). Each holds the User's Manual (PDF), a Quick Start Guide, a README, the dashboard (`matrix.html`) and the firmware.
 
 Start with the Quick Start Guide.
 
