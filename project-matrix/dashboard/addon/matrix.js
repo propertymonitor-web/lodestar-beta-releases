@@ -16,11 +16,11 @@
   /* ---------- falling code ---------- */
   const GL = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789:.=*+-<>|";
   function rain(cv, opts) {
-    const g = cv.getContext("2d"); let cols = [], fs = 16, w = 0, h = 0, run = true, last = 0;
-    function size() { const dpr = Math.min(window.devicePixelRatio || 1, 2); w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); fs = opts.fs || 16;
+    const g = cv.getContext("2d"), gap = opts.gap || 45, sc = opts.scale || 1; let cols = [], fs = 16, w = 0, h = 0, run = true, last = 0;
+    function size() { w = Math.max(1, Math.round(cv.clientWidth * sc)); h = Math.max(1, Math.round(cv.clientHeight * sc)); cv.width = w; cv.height = h; fs = opts.fs || 16;
       const n = Math.ceil(w / fs); cols = []; for (let i = 0; i < n; i++) cols.push({ y: -Math.random() * h / fs, v: 0.4 + Math.random() * 0.9 }); g.fillStyle = "#000"; g.fillRect(0, 0, w, h); }
-    function frame(ts) { if (!run) return; requestAnimationFrame(frame); if (ts - last < 45) return; last = ts;
-      if (cv.clientWidth !== w || cv.clientHeight !== h) size();
+    function frame(ts) { if (!run) return; requestAnimationFrame(frame); if (ts - last < gap || document.hidden) return; last = ts;
+      if (Math.round(cv.clientWidth * sc) !== w || Math.round(cv.clientHeight * sc) !== h) size();
       g.fillStyle = "rgba(0,0,0," + (opts.fade || 0.09) + ")"; g.fillRect(0, 0, w, h); g.font = fs + "px monospace";
       for (let i = 0; i < cols.length; i++) { const c = cols[i], x = i * fs, y = c.y * fs;
         g.fillStyle = TH.hi; g.fillText(GL[(Math.random() * GL.length) | 0], x, y);
@@ -30,8 +30,8 @@
   }
   let bg = null;
   function applyRain() {
-    const on = $("mxOptRain").checked; root.classList.toggle("norain", !on); const cv = $("mxRainCv");
-    if (on && !bg) { cv.id = "rainCv"; cv.style.display = ""; bg = rain(cv, { fs: 18, fade: 0.06 }); }
+    const on = $("mxOptRain").checked; root.classList.toggle("norain", !on); const cv = MX.rainCv || (MX.rainCv = $("mxRainCv"));
+    if (on && !bg) { cv.id = "rainCv"; cv.style.display = ""; bg = rain(cv, { fs: 11, fade: 0.12, gap: 100, scale: 0.5 }); }
     else if (!on && bg) { bg.stop(); bg = null; cv.style.display = "none"; }
   }
 
@@ -50,7 +50,9 @@
   }
 
   /* ---------- small chart helpers ---------- */
-  function cv(id) { const c = $(id), dpr = Math.min(window.devicePixelRatio || 1, 2), w = c.clientWidth || 300, h = +c.getAttribute("height") || 100; if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; } const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); g.font = "11px monospace"; return { g, w, h }; }
+  const NULLG = new Proxy(function () {}, { get: () => NULLG, apply: () => NULLG, set: () => true });   // stands in for a canvas that is not on screen, so nothing is drawn for it
+  function inView(c) { const r = c.getBoundingClientRect(); return r.bottom > -50 && r.top < innerHeight + 50 && r.width > 0; }
+  function cv(id) { const c = $(id); if (document.hidden || !inView(c)) return { g: NULLG, w: c.clientWidth || 300, h: +c.getAttribute("height") || 100 }; const dpr = Math.min(window.devicePixelRatio || 1, 2), w = c.clientWidth || 300, h = +c.getAttribute("height") || 100; if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; } const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); g.font = "11px monospace"; return { g, w, h }; }
   function grid(g, w, h, lo, hi, unit) { g.strokeStyle = "#08301a"; g.fillStyle = "#3fae62"; g.lineWidth = 1; for (let i = 0; i <= 3; i++) { const y = 4 + (h - 18) * i / 3; g.beginPath(); g.moveTo(30, y); g.lineTo(w, y); g.stroke(); g.fillText(Math.round(hi - (hi - lo) * i / 3) + (unit || ""), 0, y + 4); } }
   function line(g, pts, w, h, lo, hi, col, fill) { if (pts.length < 2) return; const X = (i) => 32 + (w - 34) * i / (pts.length - 1), Y2 = (v) => 4 + (h - 18) * (1 - (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)); g.beginPath(); pts.forEach((v, i) => { if (i) g.lineTo(X(i), Y2(v)); else g.moveTo(X(i), Y2(v)); }); g.strokeStyle = col; g.lineWidth = 1.6; g.shadowColor = col; g.shadowBlur = 5; g.stroke(); g.shadowBlur = 0; if (fill) { g.lineTo(X(pts.length - 1), h - 14); g.lineTo(X(0), h - 14); g.closePath(); g.fillStyle = fill; g.fill(); } }
   function bucket(recs, now, mins, pick) { const a = new Array(mins).fill(0); recs.forEach((r) => { const k = mins - 1 - Math.floor((now - r.t) / 60000); if (k >= 0 && k < mins) a[k] += pick ? pick(r) : 1; }); return a; }
@@ -181,9 +183,9 @@
   /* ---------- rain trails on the map ---------- */
   let trail = null, tcols = new Map();
   function trailTick() {
-    requestAnimationFrame(trailTick);
-    if (!S.map || !$("mxOptTrail").checked) { if (trail) trail.style.display = "none"; return; }
-    const mc = S.map.getContainer(); if (!trail || trail.parentNode !== mc) { trail = document.createElement("canvas"); trail.id = "mxMapRain"; mc.appendChild(trail); }
+    requestAnimationFrame(trailTick); const nowT = performance.now(); if (nowT - (MX.lastTrail || 0) < 100 || document.hidden) return; MX.lastTrail = nowT;
+    if (!S.map || !$("mxOptTrail").checked || MX.lite) { if (trail) trail.style.display = "none"; return; }
+    const mc = S.map.getContainer(); if (!inView(mc)) return; if (!trail || trail.parentNode !== mc) { trail = document.createElement("canvas"); trail.id = "mxMapRain"; mc.appendChild(trail); }
     trail.style.display = ""; const w = mc.clientWidth, h = mc.clientHeight; if (trail.width !== w || trail.height !== h) { trail.width = w; trail.height = h; }
     const g = trail.getContext("2d"); g.clearRect(0, 0, w, h); g.font = "13px monospace"; const now = Date.now();
     S.found && S.found.forEach((n, k) => { const la = n.alat != null ? n.alat : n.hlat, lo = n.alon != null ? n.alon : n.hlon; if (la == null) return; const p = S.map.latLngToContainerPoint([la, lo]); if (p.x < -20 || p.x > w + 20 || p.y < -20 || p.y > h + 20) return;
@@ -317,7 +319,7 @@
     g.strokeStyle = "#0f4a22"; g.lineWidth = 1; [1, 2, 3].forEach((k) => { g.beginPath(); g.arc(cx, cy, R * k / 3, 0, 6.2832); g.stroke(); g.fillStyle = "#2e8a49"; g.fillText(k === 3 ? "3+ hops" : k - 1 === 0 ? "direct" : (k - 1) + " hop" + (k > 2 ? "s" : ""), cx + 4, cy - R * k / 3 + 12); });
     MX.topoHit = [];
     const list = Object.keys(nodes).map((k) => nodes[k]).sort((a, b) => b.n - a.n).slice(0, 40);
-    c.g.canvas.dataset.txt = "node id, name, hops, packets, best dBm, seconds since heard\n" + list.map((o) => [o.id.toUpperCase(), meshNameFor(o.id) || "-", o.hop, o.n, o.rssi, Math.round((now - o.last) / 1000)].join(", ")).join("\n");
+    $("mxCvTopo").dataset.txt = "node id, name, hops, packets, best dBm, seconds since heard\n" + list.map((o) => [o.id.toUpperCase(), meshNameFor(o.id) || "-", o.hop, o.n, o.rssi, Math.round((now - o.last) / 1000)].join(", ")).join("\n");
     list.forEach((o) => { let h = 0; for (let i = 0; i < o.id.length; i++) h = (h * 31 + o.id.charCodeAt(i)) >>> 0; const ang = (h % 3600) / 3600 * 6.2832, rr = R * (Math.min(o.hop, 2) + 0.55) / 3, x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang) * rr, age = (now - o.last) / 1000, hot = age < 10;
       g.strokeStyle = hot ? "rgba(" + TH.rgb + ",.9)" : "rgba(" + TH.rgb + ",.18)"; g.lineWidth = hot ? 1.6 : 1; g.beginPath(); g.moveTo(cx, cy); g.lineTo(x, y); g.stroke();
       g.fillStyle = hot ? "#fff" : "rgb(" + TH.rgb + ")"; g.shadowColor = "rgb(" + TH.rgb + ")"; g.shadowBlur = hot ? 12 : 4; g.beginPath(); g.arc(x, y, hot ? 5 : 3.5, 0, 6.2832); g.fill(); g.shadowBlur = 0;
@@ -336,6 +338,13 @@
     return kids.map(tileText).filter((x) => x).join("\n");
   }
   function fallbackCopy(txt, done) { const a = document.createElement("textarea"); a.value = txt; a.style.position = "fixed"; a.style.opacity = "0"; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); done(); } catch (e) { /* the text can still be selected by hand */ } a.remove(); }
+  /* ---------- lite mode: no falling code, no map tint, no trails (for slow or low-memory computers) ---------- */
+  function setLite(on, why) { MX.lite = on; root.classList.toggle("lite", on); try { localStorage.setItem("mx-lite", on ? "1" : "0"); } catch (e) { /* none */ }
+    const ck = (id, v) => { const e = $(id); if (e) e.disabled = on; if (on && e) { e.dataset.was = e.checked ? "1" : "0"; e.checked = false; } else if (e && e.dataset.was) { e.checked = e.dataset.was === "1"; } };
+    ["mxOptRain", "mxOptMap", "mxOptTrail"].forEach((id) => ck(id)); $("mxOptLite").checked = on; applyRain(); root.classList.toggle("mxmap", !on && $("mxOptMap").checked);
+    if (why) { termPush("LITE MODE on: " + why, "adv"); } }
+  setInterval(() => { const m = performance && performance.memory; if (m && !MX.lite && m.usedJSHeapSize > 300e6) setLite(true, "this page is using a lot of memory (" + Math.round(m.usedJSHeapSize / 1e6) + " MB of script memory)"); }, 10000);
+
   /* ---------- wiring ---------- */
   function onMx(line) { let o; try { o = JSON.parse(line).mx; } catch (e) { return; } if (!o) return; const prev = MX.d; MX.d = o; MX.lastMx = Date.now();
     if (prev && o.up > prev.up) { const dt = (o.up - prev.up) * 1000; MX.air.push({ tx: Math.max(0, 100 * (o.atx - prev.atx) / dt), rx: Math.max(0, 100 * (o.arx - prev.arx) / dt) }); if (MX.air.length > 400) MX.air.shift(); } }
@@ -377,6 +386,7 @@
         const done = () => { b.textContent = "copied"; setTimeout(() => { b.textContent = "copy"; }, 1200); };
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done)); else fallbackCopy(txt, done); });
       h.appendChild(b); });
+    $("mxOptLite").addEventListener("change", (e) => setLite(e.target.checked)); if (opt("lite", false)) setLite(true);
     apply(); splash(); requestAnimationFrame(trailTick);
     if (!MX.alias) { const w = setInterval(() => { if ($("mxSplash").style.display === "none") { clearInterval(w); askAlias(true); } }, 300); } else setTimeout(() => out("welcome back, " + MX.alias + ". type help.", "adv"), 500);
     setInterval(() => { try { pullRecs(); checkAlerts(); } catch (e) { /* keep going */ } }, 1000);
