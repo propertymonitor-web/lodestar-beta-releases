@@ -253,10 +253,17 @@
     id = id.toLowerCase().slice(0, 6); const m = $("mxMenu"), nm = meshNameFor(id); m.dataset.id = id; m.querySelector(".mh").textContent = (nm || id.toUpperCase());
     m.hidden = false; const w = m.offsetWidth, h = m.offsetHeight; m.style.left = Math.max(4, Math.min(x + 8, innerWidth - w - 4)) + "px"; m.style.top = Math.max(4, Math.min(y + 8, innerHeight - h - 4)) + "px"; }
   const closeMenu = () => { $("mxMenu").hidden = true; };
-  function selectNode(id, mode) { MX.sel = id; MX.mode = mode || "decode"; MX.scanId = (MX.scanId || 0) + 1; if (MX.mode === "hack") scan(id, MX.scanId); else drawNode(); try { $("mxNode").scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) { /* none */ } }
-  function scan(id, n) {
-    const el = $("mxNodeBody"), steps = ["resolving source " + id.toUpperCase() + " ...", "reading adverts heard from it ...", "reading signal history ...", "reading position and name it announced ...", "checking for telemetry ...", "building the file ..."]; MX.scanning = true; let i = 0;
-    (function tick() { if (MX.scanId !== n) return; if (i < steps.length) { el.innerHTML = '<div class="path" style="white-space:pre">' + esc(steps.slice(0, i + 1).join("\n")) + "</div>"; i++; setTimeout(tick, 260); } else { MX.scanning = false; drawNode(); } })(); }
+  function selectNode(id, mode) { MX.sel = id; MX.mode = mode || "decode"; MX.scanId = (MX.scanId || 0) + 1; runWin(id, MX.mode, MX.scanId); }
+  /* the progress window: Decode counts one dot every 2 s for 10 s; Hack steps through . .. . ... .. . at 3 s each */
+  const HACK_DOTS = [".", "..", ".", "...", "..", "."];
+  function runWin(id, mode, n) {
+    const w = $("mxWin"), ti = $("mxWinTitle"), bd = $("mxWinBody"), nm = (meshNameFor(id) || id.toUpperCase()).toUpperCase(), hack = mode === "hack";
+    w.hidden = false; w.classList.toggle("hack", hack); bd.innerHTML = '<div class="path">' + (hack ? "gaining access to the data this source has put on the air" : "reading the source's packets") + "</div>"; MX.scanning = true; let i = 0;
+    const steps = hack ? HACK_DOTS.length : 5, every = hack ? 3000 : 2000;
+    (function tick() { if (MX.scanId !== n || w.hidden) { if (MX.scanId === n) MX.scanning = false; return; }
+      if (i < steps) { const dots = hack ? HACK_DOTS[i] : ".".repeat(i + 1); ti.textContent = (hack ? "HACKING " : "Decoding ") + nm + dots; bd.firstChild.textContent = (hack ? "step " : "pass ") + (i + 1) + " of " + steps; i++; setTimeout(tick, every); }
+      else { MX.scanning = false; drawNode(); ti.textContent = (hack ? "SUCCESSFUL HACK: " : "Decoded: ") + nm; bd.innerHTML = $("mxNodeBody").innerHTML; $("mxWin").dataset.txt = ti.textContent + "\n" + $("mxNodeBody").innerText; try { $("mxNode").scrollIntoView({ block: "nearest" }); } catch (e) { /* none */ } } })();
+  }
   const median = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
   function drawNode() {
     if (MX.scanning) return; const el = $("mxNodeBody"), id = MX.sel; if (!id) return; const now = Date.now(), rs = recsNow(), nm = meshNameFor(id), hack = MX.mode === "hack";
@@ -354,8 +361,10 @@
     $("mxCvTopo").addEventListener("click", (e) => { const r = e.target.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 18; (MX.topoHit || []).forEach((h) => { const dd = Math.hypot(h.x - x, h.y - y); if (dd < bd) { bd = dd; best = h; } }); if (best) openMenu(best.id, e.clientX, e.clientY); });
     $("mxTalk").addEventListener("click", (e) => { const r = e.target.closest("[data-id]") || (e.target.classList.contains("bar") || (e.target.parentElement && e.target.parentElement.classList.contains("bar")) ? (e.target.closest(".bar") || e.target).previousElementSibling : null); if (r && r.dataset.id) openMenu(r.dataset.id, e.clientX, e.clientY); });
     $("radarList") && $("radarList").addEventListener("click", (e) => { const row = e.target.closest("[data-k]"); if (row) openMenu(row.dataset.k.toLowerCase().slice(0, 6), e.clientX, e.clientY); });
+    $("mxWinX").addEventListener("click", () => { $("mxWin").hidden = true; MX.scanning = false; MX.scanId++; });
+    $("mxWinCopy").addEventListener("click", () => { const t = $("mxWin").dataset.txt || $("mxWinTitle").textContent; const done = () => { $("mxWinCopy").textContent = "copied"; setTimeout(() => { $("mxWinCopy").textContent = "copy"; }, 1200); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done)); else fallbackCopy(t, done); });
     $("mxMenu").addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (!b) return; const id = $("mxMenu").dataset.id; closeMenu(); if (b.dataset.act === "block") blockNode(id, meshNameFor(id)); else selectNode(id, b.dataset.act); });
-    document.addEventListener("click", (e) => { if (!$("mxMenu").hidden && !e.target.closest("#mxMenu") && !e.target.closest("#mxCvTopo, #mxTalk, #radarList")) closeMenu(); }); document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+    document.addEventListener("click", (e) => { if (!$("mxMenu").hidden && !e.target.closest("#mxMenu") && !e.target.closest("#mxCvTopo, #mxTalk, #radarList")) closeMenu(); }); document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeMenu(); if (!$("mxWin").hidden) $("mxWinX").click(); } });
     $("mxBlockBody").addEventListener("click", (e) => { const u = e.target.closest("[data-unb]"); if (u) unblockNode(u.dataset.unb); }); drawBlock(); purge();
     $("mxAliasBtn").addEventListener("click", () => askAlias(false));
     $("mxAliasForm").addEventListener("submit", (e) => { e.preventDefault(); if (setAlias($("mxAliasIn").value)) $("mxAliasBox").hidden = true; });

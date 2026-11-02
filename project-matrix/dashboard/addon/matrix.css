@@ -86,3 +86,12 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
 #mxMenu button{ display: block; width: 100%; text-align: left; margin: 2px 0; background: transparent; border: 0; color: var(--ink); padding: 8px 10px; font: 14px var(--mono); letter-spacing: .08em; cursor: pointer; }
 #mxMenu button:hover{ background: rgba(0,255,65,.14); color: var(--accent); } #mxMenu button[data-act="block"]:hover{ color: var(--bad); }
 #mxNodeBody .kv{ grid-template-columns: minmax(150px, 34%) 1fr; } #mxNodeBody .kv b{ text-align: left; word-break: break-word; }
+#mxWin{ position: fixed; inset: 0; z-index: 8400; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
+#mxWin[hidden]{ display: none; } #mxWin .mwbox{ width: min(760px, 100%); max-height: 88vh; overflow: auto; background: #000; border: 1px solid var(--accent); box-shadow: 0 0 40px rgba(0,255,65,.35); }
+#mxWin.hack .mwbox{ border-color: var(--bad); box-shadow: 0 0 40px rgba(255,59,59,.35); }
+#mxWin .mwhead{ display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font: 700 18px var(--mono); letter-spacing: .1em; color: var(--accent); text-shadow: 0 0 8px var(--accent); position: sticky; top: 0; background: #000; }
+#mxWin.hack .mwhead{ color: var(--bad); text-shadow: 0 0 8px var(--bad); }
+#mxWinBody{ padding: 12px 16px 16px; } #mxWinBody .path{ min-height: 2em; }
+#mxWinBody .kv{ display: grid; grid-template-columns: minmax(150px, 34%) 1fr; gap: 2px 10px; font: 13px var(--mono); margin-top: 6px; } #mxWinBody .kv span{ color: var(--muted); } #mxWinBody .kv b{ color: var(--ink); font-weight: 600; text-align: left; word-break: break-word; }
+#mxWinBody table{ border-collapse: collapse; font: 12.5px var(--mono); margin-top: 6px; } #mxWinBody td, #mxWinBody th{ padding: 2px 10px 2px 0; text-align: left; font-weight: 400; } #mxWinBody th{ color: var(--muted); }
+#mxWinBody .big{ font: 700 28px var(--mono); color: var(--accent); } #mxWinBody .sub{ color: var(--ink2); font-size: 13px; margin-top: 2px; }
