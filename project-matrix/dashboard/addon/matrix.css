@@ -1,0 +1,67 @@
+/* ===== PROJECT MATRIX theme: phosphor green on black, falling code behind the panels ===== */
+html.matrix[data-theme="dark"], html.matrix:where(:not([data-theme="light"])), html.tac.matrix[data-theme="dark"], html.tac.matrix:where(:not([data-theme="light"])){
+  color-scheme: dark; --bg: #000402; --panel: #010a05; --line: #0f4a22; --grid: #08301a; --ink: #c8ffd6; --ink2: #7fe79b; --muted: #3fae62;
+  --accent: #00ff41; --bad: #ff3b3b; --rep: #00ff41; --comp: #4dffd2; --room: #ffe44d; --sens: #b8a0ff; --warn: #ffe44d; --glow: 0 0 10px rgba(0,255,65,.35);
+  --mono: "Share Tech Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace; --font: var(--mono); --font-d: var(--mono);
+}
+html.matrix body{ background-color: #000; background-image: none; font-family: var(--mono); }
+html.matrix .wrap{ position: relative; z-index: 2; }
+html.matrix .panel, html.matrix .card{ background: rgba(1,10,5,.84); border-color: var(--line); box-shadow: 0 0 0 1px rgba(0,255,65,.06), inset 0 0 24px rgba(0,255,65,.04); }
+html.matrix h2{ color: var(--accent); text-shadow: 0 0 6px rgba(0,255,65,.5); letter-spacing: .12em; }
+html.matrix .brand{ color: var(--accent); text-shadow: 0 0 10px rgba(0,255,65,.7); letter-spacing: .18em; }
+html.matrix button, html.matrix select, html.matrix input{ font-family: var(--mono); }
+html.matrix button{ background: rgba(0,40,14,.7); border-color: var(--line); color: var(--ink); }
+html.matrix button:hover:not(:disabled){ border-color: var(--accent); box-shadow: 0 0 8px rgba(0,255,65,.4); }
+html.matrix button.primary{ color: #00140a; background: var(--accent); }
+html.matrix #rainCv{ position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: .5; }
+html.matrix.norain #rainCv{ display: none; }
+html.matrix:not(.norain) body::after{ opacity: .15; }
+/* the map in phosphor green; the markers and lines on top keep their own colours */
+html.matrix.mxmap .leaflet-tile-pane{ filter: grayscale(1) invert(1) contrast(1.15) brightness(.7) sepia(1) hue-rotate(75deg) saturate(4); }
+html.matrix .leaflet-container{ background: #000a04; }
+/* splash */
+#mxSplash{ position: fixed; inset: 0; z-index: 9000; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity .9s ease; cursor: pointer; }
+#mxSplash.gone{ opacity: 0; pointer-events: none; }
+#mxSplash canvas{ position: absolute; inset: 0; width: 100%; height: 100%; }
+#mxSplash .mxtxt{ position: relative; z-index: 2; text-align: center; font-family: "Share Tech Mono", ui-monospace, Consolas, monospace; color: #00ff41; text-shadow: 0 0 14px rgba(0,255,65,.9), 0 0 40px rgba(0,255,65,.5); padding: 28px 40px; background: radial-gradient(ellipse at center, rgba(0,0,0,.88) 0 55%, rgba(0,0,0,0) 78%); }
+#mxSplash .l1{ font-size: clamp(30px, 7vw, 76px); letter-spacing: .22em; min-height: 1.2em; }
+#mxSplash .l2, #mxSplash .l3{ font-size: clamp(16px, 2.6vw, 28px); letter-spacing: .12em; margin-top: .6em; min-height: 1.3em; color: #9dffb4; }
+#mxSplash .cur::after{ content: "\2588"; animation: mxblink .7s steps(1) infinite; margin-left: .1em; }
+#mxSplash .skip{ position: absolute; bottom: 22px; left: 0; right: 0; text-align: center; z-index: 2; color: #2fa04f; font: 13px "Share Tech Mono", ui-monospace, Consolas, monospace; letter-spacing: .14em; }
+@keyframes mxblink{ 50% { opacity: 0; } }
+/* deck */
+#mxDeck .mxgrid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 10px; }
+#mxDeck .mxt{ border: 1px solid var(--line); background: rgba(0,18,8,.8); padding: 10px 12px; min-width: 0; position: relative; }
+#mxDeck .mxt.wide{ grid-column: span 2; }
+@media (max-width: 720px){ #mxDeck .mxt.wide{ grid-column: span 1; } }
+#mxDeck .mxt h3{ margin: 0 0 6px; font: 600 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); text-shadow: 0 0 5px rgba(0,255,65,.5); }
+#mxDeck .mxt h3 small{ color: var(--muted); letter-spacing: .04em; text-transform: none; font-weight: 400; }
+#mxDeck .big{ font: 700 30px var(--mono); color: var(--accent); text-shadow: 0 0 8px rgba(0,255,65,.5); line-height: 1.1; }
+#mxDeck .sub{ color: var(--ink2); font-size: 13px; margin-top: 2px; }
+#mxDeck .kv{ display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font: 13px var(--mono); margin-top: 6px; }
+#mxDeck .kv span{ color: var(--muted); } #mxDeck .kv b{ color: var(--ink); font-weight: 600; text-align: right; }
+#mxDeck .bar{ height: 7px; background: #03210f; border: 1px solid var(--line); margin-top: 3px; position: relative; }
+#mxDeck .bar i{ position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #00a82a, #00ff41); box-shadow: 0 0 6px rgba(0,255,65,.7); }
+#mxDeck .bar.warn i{ background: linear-gradient(90deg, #a88a00, #ffe44d); } #mxDeck .bar.bad i{ background: linear-gradient(90deg, #a81414, #ff3b3b); }
+#mxDeck canvas{ display: block; width: 100%; }
+#mxDeck .row2{ display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; font-size: 13px; }
+#mxDeck select, #mxDeck input[type=number]{ max-width: 100%; }
+#mxTerm{ height: 230px; overflow-y: auto; background: #000; border: 1px solid var(--line); font: 12.5px/1.45 var(--mono); padding: 6px 8px; white-space: pre; color: #5fe07f; }
+#mxTerm .rx{ color: #5fe07f; } #mxTerm .tx{ color: #ffe44d; } #mxTerm .adv{ color: #4dffd2; } #mxTerm .msg{ color: #d6ffe0; } #mxTerm .dim{ color: #2e8a49; }
+#mxAlerts .rule{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0; font-size: 13px; }
+#mxAlogList{ list-style: none; margin: 6px 0 0; padding: 0; max-height: 150px; overflow-y: auto; font: 12.5px var(--mono); border: 1px solid var(--line); }
+#mxAlogList li{ padding: 3px 8px; border-top: 1px solid var(--grid); } #mxAlogList li:first-child{ border-top: 0; }
+#mxAlogList .a{ color: var(--warn); } #mxAlogList time{ color: var(--muted); margin-right: 8px; }
+#mxFlash{ position: fixed; inset: 0; pointer-events: none; z-index: 8000; box-shadow: inset 0 0 0 0 rgba(255,228,77,0); }
+#mxFlash.on{ animation: mxflash 1.1s ease-out; }
+@keyframes mxflash{ 0% { box-shadow: inset 0 0 0 10px rgba(255,228,77,.85), inset 0 0 120px 30px rgba(255,228,77,.35); } 100% { box-shadow: inset 0 0 0 0 rgba(255,228,77,0); } }
+#mxFoot{ text-align: center; color: var(--muted); font: 12px var(--mono); letter-spacing: .14em; padding: 16px 0 28px; }
+@media (prefers-reduced-motion: reduce){ #mxSplash .cur::after, #mxFlash.on{ animation: none; } }
+html.matrix #btnTheme{ display: none; }
+#mxMapRain{ position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 650; }
+#mxDeck .tog{ display: inline-flex; gap: 5px; align-items: center; color: var(--ink2); font-size: 13px; }
+#mxDeck .pill{ display: inline-block; border: 1px solid var(--line); padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 12px; color: var(--ink2); }
+#mxDeck .pill.hot{ border-color: var(--accent); color: var(--accent); }
+#mxDeck .fc{ font: 700 22px var(--mono); letter-spacing: .1em; }
+#mxDeck .fc.ok{ color: var(--accent); } #mxDeck .fc.warn{ color: var(--warn); } #mxDeck .fc.bad{ color: var(--bad); }
+html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !important; color: #00140a !important; font-weight: 700; text-shadow: none; }

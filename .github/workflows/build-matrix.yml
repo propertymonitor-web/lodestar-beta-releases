@@ -1,0 +1,133 @@
+name: Build PROJECT MATRIX firmware
+
+# PROJECT MATRIX = the OTR tactical firmware (NOVA + ORION radar + Mesh Analyzer) plus the Matrix edition patch
+# in project-matrix/tools/apply_matrix.py. By Aries Thorne, for Matrix Comm. Systems.
+#   * every push that touches project-matrix/: the patch is applied to the pinned MeshCore and the PC tests run (no firmware build)
+#   * "Run workflow" by hand: the same checks, then the full firmware build (about 6 minutes), optionally published as a Release
+on:
+  push:
+    paths: ["project-matrix/**", ".github/workflows/build-matrix.yml"]
+  workflow_dispatch:
+    inputs:
+      units:
+        description: "Speed units: mph or metric (km/h)"
+        type: choice
+        default: mph
+        options: [mph, metric]
+      env:
+        description: "PlatformIO environment (the radio). Default is the Heltec V4"
+        type: string
+        default: heltec_v4_companion_radio_ble
+      board:
+        description: "Short name of the radio, used in file names (e.g. heltec-v4, heltec-v3)"
+        type: string
+        default: heltec_v4
+      meshcore_ref:
+        description: "MeshCore commit to build on"
+        type: string
+        default: 81dbae592ffad40b4212bc0b37e82b38da08f4bc
+      release_tag:
+        description: "Publish (or add to) a Release with this tag. Empty = just build"
+        type: string
+        default: ""
+      release_title:
+        description: "Release title (used only when the tag is new)"
+        type: string
+        default: "PROJECT MATRIX (BETA)"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PIO_ENV: ${{ inputs.env || 'heltec_v4_companion_radio_ble' }}
+      UNITS: ${{ inputs.units || 'mph' }}
+      BOARD: ${{ inputs.board || 'heltec_v4' }}
+      MC_REF: ${{ inputs.meshcore_ref || '81dbae592ffad40b4212bc0b37e82b38da08f4bc' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { repository: propertymonitor-web/lodestar_nova_alpha, path: orion }
+      - uses: actions/checkout@v4
+        with: { repository: propertymonitor-web/wolf_companion, path: wolf }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Get MeshCore
+        run: |
+          git init mc
+          cd mc
+          git remote add origin https://github.com/meshcore-dev/MeshCore.git
+          git fetch --depth 1 origin "$MC_REF"
+          git checkout FETCH_HEAD
+
+      - name: Apply NOVA, ORION, Mesh Analyzer, TACTICAL (the OTR base), then MATRIX
+        run: |
+          python3 orion/tools/apply_nova.py --meshcore mc
+          python3 wolf/tools/apply_orion_wolf.py --meshcore mc
+          python3 wolf/tools/apply_orion_mesh.py --meshcore mc
+          python3 wolf/tools/apply_orion_tactical.py --meshcore mc
+          python3 project-matrix/tools/apply_matrix.py --meshcore mc
+
+      - name: Dashboard checks (the page builds and its pieces are all there)
+        run: python3 project-matrix/tools/build_dashboard.py --check
+
+      - name: Build firmware
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          set -o pipefail
+          export PLATFORMIO_BUILD_FLAGS="-DNOVA_ORION=1 -DPET_WOLF=1 $([ "$UNITS" = mph ] && echo -DNOVA_MPH=1) -DTACTICAL=1 -DOTR=1 -DMATRIX=1"
+          echo "flags: $PLATFORMIO_BUILD_FLAGS"
+          pip install platformio
+          cd mc
+          pio run -e "$PIO_ENV" -t mergebin 2>&1 | tee ../build.log
+
+      - name: Show compile errors
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' }}
+        run: |
+          { grep -E "error|overflow|will not fit|region|FAILED|undefined reference|No such file" build.log; tail -n 12 build.log; } | head -40 | while IFS= read -r l; do
+            echo "::error::${l:0:900}"
+          done
+
+      - name: Check the version marker is inside the build
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          B=mc/.pio/build/"$PIO_ENV"
+          WANT="0.1.0-matrix"; [ "$UNITS" = mph ] && WANT="0.1.0-matrix-mph"
+          strings -n 5 "$B/firmware.bin" | grep -q -x -F "$WANT" || { echo "::error::version marker $WANT is missing from the build"; exit 1; }
+          strings -n 5 "$B/firmware.bin" | grep -q -F "Matrix Comm" || { echo "::error::boot screen text missing from the build"; exit 1; }
+          echo "version marker and boot text found"
+
+      - name: Collect output
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          mkdir -p out
+          B=mc/.pio/build/"$PIO_ENV"
+          P="matrix-$BOARD-$UNITS"
+          cp $B/firmware-merged.bin "out/$P-merged.bin"
+          cp $B/firmware.bin "out/$P-update.bin"
+          git -C mc rev-parse HEAD > out/meshcore_commit.txt
+          cp project-matrix/dashboard/matrix.html out/matrix.html
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        with:
+          name: matrix-${{ env.BOARD }}-${{ env.UNITS }}
+          path: out/
+
+      - name: Publish release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+          TITLE: ${{ inputs.release_title }}
+        run: |
+          FILES="out/matrix-$BOARD-$UNITS-merged.bin out/matrix-$BOARD-$UNITS-update.bin out/matrix.html"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" $FILES --clobber
+          else
+            gh release create "$TAG" $FILES --title "$TITLE" --prerelease --notes-file project-matrix/docs/RELEASE-NOTES.md
+          fi

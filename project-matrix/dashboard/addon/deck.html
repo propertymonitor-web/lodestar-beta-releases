@@ -1,0 +1,36 @@
+<section class="panel" id="mxDeck" aria-label="Matrix data deck">
+  <h2>Matrix deck <span class="note">everything the radio can tell us, whether you asked or not</span></h2>
+  <div class="row2">
+    <label class="tog"><input type="checkbox" id="mxOptRain" checked> Falling code</label>
+    <label class="tog"><input type="checkbox" id="mxOptMap" checked> Green map</label>
+    <label class="tog"><input type="checkbox" id="mxOptTrail" checked> Rain trails on map</label>
+    <label class="tog"><input type="checkbox" id="mxOptBeep"> Alert beep</label>
+    <button id="mxReplay" type="button">Replay intro</button>
+  </div>
+  <div class="mxgrid">
+    <div class="mxt"><h3>Link health <small>0-100</small></h3><div class="big" id="mxHealth">--</div><div class="sub" id="mxHealthSub">waiting for data</div>
+      <div class="bar" id="mxHealthBar"><i style="width:0"></i></div><div class="kv" id="mxHealthKv"></div></div>
+    <div class="mxt"><h3>Signal weather</h3><div class="fc ok" id="mxFc">STANDBY</div><div class="sub" id="mxFcSub">needs a few minutes of packets</div><canvas id="mxCvWx" height="90"></canvas></div>
+    <div class="mxt"><h3>Packet pulse <small>last 30 min, per minute</small></h3><canvas id="mxCvPulse" height="110"></canvas><div class="sub" id="mxPulseSub"></div></div>
+    <div class="mxt"><h3>Link history <small>best repeater score</small></h3><canvas id="mxCvHist" height="110"></canvas><div class="sub" id="mxHistSub"></div></div>
+    <div class="mxt wide"><h3>Intercept terminal <small>every packet this radio hears or sends</small></h3><div id="mxTerm" role="log" aria-live="off"></div>
+      <div class="row2"><label class="tog"><input type="checkbox" id="mxTermPause"> Pause</label><label class="tog">Filter <select id="mxTermF"><option value="">all</option><option value="rx">heard</option><option value="tx">sent</option><option value="adv">adverts</option><option value="msg">messages</option></select></label><button id="mxTermClr" type="button">Clear</button></div></div>
+    <div class="mxt"><h3>Census <small>last hour</small></h3><div id="mxCensus"></div></div>
+    <div class="mxt"><h3>Top talkers <small>last hour</small></h3><div id="mxTalk"></div></div>
+    <div class="mxt"><h3>Range records</h3><div class="kv" id="mxRecs"></div></div>
+    <div class="mxt"><h3>Radio link budget <small>worked out from the radio settings</small></h3><div class="kv" id="mxBudget"><span>waiting for the radio</span><b>--</b></div></div>
+    <div class="mxt"><h3>Airtime and duty <small>how much of the time the radio talks</small></h3><canvas id="mxCvAir" height="80"></canvas><div class="kv" id="mxAir"></div></div>
+    <div class="mxt"><h3>System vitals</h3><div class="kv" id="mxVit"></div></div>
+    <div class="mxt"><h3>Motion and position</h3><canvas id="mxCvCmp" height="120"></canvas><div class="kv" id="mxMot"></div></div>
+    <div class="mxt wide" id="mxAlerts"><h3>Alerts and triggers</h3>
+      <div class="rule"><label class="tog"><input type="checkbox" id="aNew" checked> New node discovered</label></div>
+      <div class="rule"><label class="tog"><input type="checkbox" id="aSil" checked> Nothing heard for</label><input type="number" id="aSilV" value="120" min="10" max="3600" style="width:80px"> seconds</div>
+      <div class="rule"><label class="tog"><input type="checkbox" id="aNoise" checked> Noise floor above</label><input type="number" id="aNoiseV" value="-100" min="-130" max="-60" style="width:80px"> dBm</div>
+      <div class="rule"><label class="tog"><input type="checkbox" id="aBat" checked> Battery below</label><input type="number" id="aBatV" value="20" min="1" max="90" style="width:80px"> %</div>
+      <div class="rule"><label class="tog"><input type="checkbox" id="aTemp" checked> Radio chip hotter than</label><input type="number" id="aTempV" value="70" min="30" max="110" style="width:80px"> &deg;C</div>
+      <div class="rule"><label class="tog"><input type="checkbox" id="aLink" checked> Best link score below</label><input type="number" id="aLinkV" value="30" min="1" max="99" style="width:80px"></div>
+      <ul id="mxAlogList"><li class="dim">No alerts yet.</li></ul></div>
+  </div>
+  <p class="note" id="mxNote" style="margin-top:10px"></p>
+</section>
+<div id="mxFoot">PROJECT MATRIX &middot; By: Aries Thorne &middot; For: Matrix Comm. Systems<br>Engineered by: Aries Thorne &amp; Todd Steinhauer for Wolf Reactive Systems (WRS)<br>Special thanks to the NTXMESH community, Meshcore Community, and Pat Steinhauer-Scates for their guidance and support.</div>
