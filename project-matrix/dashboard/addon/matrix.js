@@ -254,14 +254,14 @@
     m.hidden = false; const w = m.offsetWidth, h = m.offsetHeight; m.style.left = Math.max(4, Math.min(x + 8, innerWidth - w - 4)) + "px"; m.style.top = Math.max(4, Math.min(y + 8, innerHeight - h - 4)) + "px"; }
   const closeMenu = () => { $("mxMenu").hidden = true; };
   function selectNode(id, mode) { MX.sel = id; MX.mode = mode || "decode"; MX.scanId = (MX.scanId || 0) + 1; runWin(id, MX.mode, MX.scanId); }
-  /* the progress window: Decode counts one dot every 2 s for 10 s; Hack steps through . .. . ... .. . at 3 s each */
-  const HACK_DOTS = [".", "..", ".", "...", "..", "."];
+  /* the progress window: Decode counts one dot every 2 s for 10 s; Hack steps through . .. . ... .. . at 3 s each, three times over */
+  const HACK_DOTS = [".", "..", ".", "...", "..", ".", ".", "..", ".", "...", "..", ".", ".", "..", ".", "...", "..", "."];   // the six-step cycle, three times (54 s)
   function runWin(id, mode, n) {
     const w = $("mxWin"), ti = $("mxWinTitle"), bd = $("mxWinBody"), nm = (meshNameFor(id) || id.toUpperCase()).toUpperCase(), hack = mode === "hack";
     w.hidden = false; w.classList.toggle("hack", hack); bd.innerHTML = '<div class="path">' + (hack ? "gaining access to the data this source has put on the air" : "reading the source's packets") + "</div>"; MX.scanning = true; let i = 0;
     const steps = hack ? HACK_DOTS.length : 5, every = hack ? 3000 : 2000;
     (function tick() { if (MX.scanId !== n || w.hidden) { if (MX.scanId === n) MX.scanning = false; return; }
-      if (i < steps) { const dots = hack ? HACK_DOTS[i] : ".".repeat(i + 1); ti.textContent = (hack ? "HACKING " : "Decoding ") + nm + dots; bd.firstChild.textContent = (hack ? "step " : "pass ") + (i + 1) + " of " + steps; i++; setTimeout(tick, every); }
+      if (i < steps) { const dots = hack ? HACK_DOTS[i] : ".".repeat(i + 1); ti.textContent = (hack ? "HACKING " : "Decoding ") + nm + dots; bd.firstChild.textContent = (hack ? "cycle " + (Math.floor(i / 6) + 1) + " of 3" : "pass " + (i + 1) + " of " + steps); i++; setTimeout(tick, every); }
       else { MX.scanning = false; drawNode(); ti.textContent = (hack ? "SUCCESSFUL HACK: " : "Decoded: ") + nm; bd.innerHTML = $("mxNodeBody").innerHTML; $("mxWin").dataset.txt = ti.textContent + "\n" + $("mxNodeBody").innerText; try { $("mxNode").scrollIntoView({ block: "nearest" }); } catch (e) { /* none */ } } })();
   }
   const median = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
