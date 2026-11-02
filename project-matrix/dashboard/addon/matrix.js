@@ -147,7 +147,7 @@
     // talkers
     { const hr = rs.filter((r) => !r.tx && r.id && r.t > now - 3600000), by = {}; hr.forEach((r) => { (by[r.id] = by[r.id] || { n: 0, r: 0, s: -99 }); const o = by[r.id]; o.n++; o.r += r.rssi; o.s = Math.max(o.s, r.snr); });
       const top = Object.keys(by).sort((a, b) => by[b].n - by[a].n).slice(0, 6), mx = top.length ? by[top[0]].n : 1;
-      $("mxTalk").innerHTML = top.length ? top.map((k) => { const nm = meshNameFor(k); return '<div class="kv"><span>' + esc(nm || k.toUpperCase()) + '</span><b>' + by[k].n + " pkts &middot; " + Math.round(by[k].r / by[k].n) + ' dBm</b></div><div class="bar"><i style="width:' + Math.round(100 * by[k].n / mx) + '%"></i></div>'; }).join("") : '<div class="sub">nothing heard yet</div>'; }
+      $("mxTalk").innerHTML = top.length ? top.map((k) => { const nm = meshNameFor(k); return '<div class="kv" data-id="' + esc(k) + '"><span>' + esc(nm || k.toUpperCase()) + '</span><b>' + by[k].n + " pkts &middot; " + Math.round(by[k].r / by[k].n) + ' dBm</b></div><div class="bar"><i style="width:' + Math.round(100 * by[k].n / mx) + '%"></i></div>'; }).join("") : '<div class="sub">nothing heard yet</div>'; }
     // range records
     { const me = f && f.gps && f.gps.fix ? [f.gps.lat, f.gps.lon] : null; let far = null, farRep = null, farD = 0, farRD = 0;
       if (S.found) S.found.forEach((n) => { if (n.alat == null) return; const o = me || (n.hlat != null ? [n.hlat, n.hlon] : null); if (!o) return; const m = meters(o, [n.alat, n.alon]); if (m > farD) { farD = m; far = n; } if (n.t === 2 && m > farRD) { farRD = m; farRep = n; } });
@@ -173,7 +173,7 @@
       $("mxCvHist").dataset.txt = "best repeater score history: " + S.hist.slice(-240).map((x) => x.best).join(" ");
       $("mxCvAir").dataset.txt = "tx duty % / rx duty %:\n" + MX.air.slice(-120).map((x) => x.tx.toFixed(2) + " / " + x.rx.toFixed(2)).join("\n");
       $("mxCvCmp").dataset.txt = f && f.gps && f.gps.fix ? "heading " + (f.gps.course || 0) + " deg" : ""; }
-    drawWaterfall(); drawTopo(); drawSession();
+    drawWaterfall(); drawTopo(); drawSession(); drawNode();
     drawTerm();
   }
   const upfmt = (s) => { const dd = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return (dd ? dd + "d " : "") + h + "h " + m + "m"; };
@@ -208,7 +208,7 @@
   /* ---------- command line (display only: reads what the dashboard already knows) ---------- */
   function out(txt, cls) { String(txt).split("\n").forEach((l) => termPush(l, cls || "out")); termDirty = true; }
   const CMDS = {
-    help: () => out("commands:\n  help          this list\n  whoami        your alias and session\n  alias NAME    change your alias\n  status        link health, weather, radio vitals\n  nodes         every node this dashboard knows\n  top           busiest senders in the last hour\n  budget        radio link budget\n  weather       signal weather forecast\n  colour NAME   green | red | amber | cyan\n  rain on|off   falling code\n  export        save the intercept log\n  clear         clear this screen\n  intro         replay the splash\n  (nothing typed here is sent to the radio)"),
+    help: () => out("commands:\n  help          this list\n  whoami        your alias and session\n  alias NAME    change your alias\n  status        link health, weather, radio vitals\n  nodes         every node this dashboard knows\n  node NAME     hops and path for one node (or click it)\n  top           busiest senders in the last hour\n  budget        radio link budget\n  weather       signal weather forecast\n  colour NAME   green | red | amber | cyan\n  rain on|off   falling code\n  export        save the intercept log\n  clear         clear this screen\n  intro         replay the splash\n  (nothing typed here is sent to the radio)"),
     whoami: () => out("operator " + (MX.alias || "?") + "  session " + dur((Date.now() - SESS.t0) / 1000) + "  captured " + SESS.pk + " packets"),
     alias: (a) => { if (a && setAlias(a)) out("alias is now " + MX.alias); else askAlias(false); },
     status: () => { const H = health(), W = forecast(), d = MX.d; out("link health " + (S.frame ? H.v : "--") + "/100  weather " + W.k + (d ? "\nchip " + fmt(d.t, 1) + " C  heap " + fmt(d.hp / 1024, 0) + " kB  noise " + d.nf + " dBm  up " + upfmt(d.up) : "\nradio vitals: waiting for the radio")); },
@@ -218,12 +218,38 @@
     weather: () => { const W = forecast(); out(W.k + ": " + W.s); },
     colour: (a) => { if (THEMES[a]) { applyTheme(a); out("colour " + a); } else out("green | red | amber | cyan", "err"); },
     rain: (a) => { $("mxOptRain").checked = a !== "off"; $("mxOptRain").dispatchEvent(new Event("change")); out("falling code " + (a === "off" ? "off" : "on")); },
+    node: (a) => { if (!a) out("usage: node NAME or ID", "err"); else { selectNode(normId(a)); out("node detail: " + normId(a).toUpperCase() + " (see the Node detail tile)"); } },
     export: () => exportLog(), clear: () => { tl.length = 0; termDirty = true; }, intro: () => splash(),
   };
   CMDS.color = CMDS.colour;
   function runCmd(line) { const t = line.trim(); if (!t) return; termPush((MX.alias || "?") + "@matrix> " + t, "tx"); const w = t.split(/\s+/), f = CMDS[w[0].toLowerCase()]; if (f) f(w.slice(1).join(" ").trim().toLowerCase() === w.slice(1).join(" ").trim() ? w.slice(1).join(" ") : w.slice(1).join(" ")); else out("unknown command: " + w[0] + "  (type help)", "err"); }
   function exportLog() { const b = new Blob([tl.map((x) => x.txt).join("\n") + "\n"], { type: "text/plain" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "matrix-intercept-" + new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-") + ".txt"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
   const dur = (s) => { s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (h ? h + "h " : "") + m + "m " + (s % 60) + "s"; };
+
+
+  /* ---------- node detail: hops and path, from what the radio reports ---------- */
+  function normId(v) { v = String(v || "").trim().toLowerCase(); const m = Object.keys(MX.known || {}).find((k) => k === v || k.startsWith(v)); if (m) return m; let hit = null; S.found && S.found.forEach((n) => { if (!hit && (n.k.toLowerCase().startsWith(v) || (n.n && n.n.toLowerCase().indexOf(v) >= 0))) hit = n.k.toLowerCase().slice(0, 6); }); return hit || v.slice(0, 6); }
+  function selectNode(id) { MX.sel = id; drawNode(); try { $("mxNode").scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) { /* none */ } }
+  function drawNode() {
+    const el = $("mxNodeBody"), id = MX.sel; if (!id) return; const now = Date.now(), rs = recsNow(), nm = meshNameFor(id);
+    const via = rs.filter((r) => !r.tx && r.id === id), orig = rs.filter((r) => !r.tx && r.src === id && r.src !== r.id), own = rs.filter((r) => !r.tx && (r.id === id && (!r.src || r.src === id)));
+    const known = S.found && [...S.found.values()].find((n) => n.k.toLowerCase().startsWith(id)), f = S.frame, me = f && f.gps && f.gps.fix ? [f.gps.lat, f.gps.lon] : null;
+    const hops = via.map((r) => r.hops), mn = hops.length ? Math.min.apply(null, hops) : null, mxh = hops.length ? Math.max.apply(null, hops) : null, avg = hops.length ? hops.reduce((a, b) => a + b, 0) / hops.length : null;
+    let h = '<div class="big">' + esc(nm || id.toUpperCase()) + '</div><div class="sub">id ' + esc(id.toUpperCase()) + (known ? " &middot; " + (known.t === 2 ? "repeater" : known.t === 1 ? "companion" : "room server") : "") + "</div>";
+    if (!via.length && !orig.length) { h += '<div class="sub">no packets from this node in the intercept history yet</div>'; el.innerHTML = h; return; }
+    const lastR = via.concat(orig).reduce((a, r) => (r.t > a ? r.t : a), 0);
+    let path;
+    if (mn === 0) path = esc(MX.alias || "YOU") + " &larr; " + esc(nm || id.toUpperCase()) + "  (heard directly, 0 hops)";
+    else { const n1 = mn; path = esc(MX.alias || "YOU") + " &larr; [" + esc(nm || id.toUpperCase()) + " relay] &larr; " + (n1 > 1 ? "(" + (n1 - 1) + " more relay" + (n1 > 2 ? "s" : "") + " not reported) &larr; " : "") + "origin  (" + n1 + " hop" + (n1 > 1 ? "s" : "") + ")"; }
+    h += '<div class="path">' + path + "</div>";
+    const rows = [["packets heard from it as last relay", via.length], ["hops (best / typical / worst)", hops.length ? mn + " / " + avg.toFixed(1) + " / " + mxh : "--"], ["strongest signal", via.length ? Math.max.apply(null, via.map((r) => r.rssi)) + " dBm" : "--"], ["best SNR", via.length ? Math.max.apply(null, via.map((r) => r.snr)).toFixed(1) + " dB" : "--"], ["last heard", lastR ? Math.round((now - lastR) / 1000) + " s ago" : "--"]];
+    if (known && known.alat != null) { rows.push(["position", known.alat.toFixed(5) + ", " + known.alon.toFixed(5)]); if (me) rows.push(["distance from you", (meters(me, [known.alat, known.alon]) / 1000).toFixed(2) + " km"]); }
+    h += '<div class="kv">' + rows.map((r) => "<span>" + esc(r[0]) + "</span><b>" + esc(String(r[1])) + "</b>").join("") + "</div>";
+    if (orig.length) { const by = {}; orig.forEach((r) => { const k = r.id + "|" + r.hops; by[k] = (by[k] || 0) + 1; });
+      h += '<div class="sub" style="margin-top:8px">packets that this node originated, and the last relay each came through</div><table><tr><th>last relay</th><th>hops</th><th>packets</th></tr>' + Object.keys(by).sort((a, b) => by[b] - by[a]).slice(0, 8).map((k) => { const p = k.split("|"); return "<tr><td>" + esc((meshNameFor(p[0]) || "") + " " + p[0].toUpperCase()) + "</td><td>" + p[1] + "</td><td>" + by[k] + "</td></tr>"; }).join("") + "</table>"; }
+    h += '<div class="sub" style="margin-top:8px;color:var(--muted)">The radio reports how many hops a packet took and the last relay it came through, not the full route, so the hops between are shown as unknown.</div>';
+    el.innerHTML = h; $("mxNode").dataset.txt = el.innerText;
+  }
 
   /* ---------- waterfall and topology ---------- */
   function drawWaterfall() {
@@ -238,11 +264,13 @@
     const c = cv("mxCvTopo"), g = c.g, now = Date.now(), cx = c.w / 2, cy = c.h / 2, R = Math.min(cx, cy) - 22, nodes = {};
     recsNow().forEach((r) => { if (r.tx || !r.id || r.t < now - 3600000) return; const o = nodes[r.id] || (nodes[r.id] = { id: r.id, hop: 9, last: 0, n: 0, rssi: -130 }); o.hop = Math.min(o.hop, r.hops); o.last = Math.max(o.last, r.t); o.n++; o.rssi = Math.max(o.rssi, r.rssi); });
     g.strokeStyle = "#0f4a22"; g.lineWidth = 1; [1, 2, 3].forEach((k) => { g.beginPath(); g.arc(cx, cy, R * k / 3, 0, 6.2832); g.stroke(); g.fillStyle = "#2e8a49"; g.fillText(k === 3 ? "3+ hops" : k - 1 === 0 ? "direct" : (k - 1) + " hop" + (k > 2 ? "s" : ""), cx + 4, cy - R * k / 3 + 12); });
+    MX.topoHit = [];
     const list = Object.keys(nodes).map((k) => nodes[k]).sort((a, b) => b.n - a.n).slice(0, 40);
     c.g.canvas.dataset.txt = "node id, name, hops, packets, best dBm, seconds since heard\n" + list.map((o) => [o.id.toUpperCase(), meshNameFor(o.id) || "-", o.hop, o.n, o.rssi, Math.round((now - o.last) / 1000)].join(", ")).join("\n");
     list.forEach((o) => { let h = 0; for (let i = 0; i < o.id.length; i++) h = (h * 31 + o.id.charCodeAt(i)) >>> 0; const ang = (h % 3600) / 3600 * 6.2832, rr = R * (Math.min(o.hop, 2) + 0.55) / 3, x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang) * rr, age = (now - o.last) / 1000, hot = age < 10;
       g.strokeStyle = hot ? "rgba(" + TH.rgb + ",.9)" : "rgba(" + TH.rgb + ",.18)"; g.lineWidth = hot ? 1.6 : 1; g.beginPath(); g.moveTo(cx, cy); g.lineTo(x, y); g.stroke();
       g.fillStyle = hot ? "#fff" : "rgb(" + TH.rgb + ")"; g.shadowColor = "rgb(" + TH.rgb + ")"; g.shadowBlur = hot ? 12 : 4; g.beginPath(); g.arc(x, y, hot ? 5 : 3.5, 0, 6.2832); g.fill(); g.shadowBlur = 0;
+      MX.topoHit.push({ x, y, id: o.id }); if (MX.sel === o.id) { g.strokeStyle = "#fff"; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 10, 0, 6.2832); g.stroke(); }
       const nm = meshNameFor(o.id) || o.id.toUpperCase(); g.fillStyle = "#9dffb4"; g.textAlign = x > cx ? "left" : "right"; g.fillText(nm.slice(0, 16), x + (x > cx ? 8 : -8), y + 4); g.textAlign = "left"; });
     g.fillStyle = "#000"; g.strokeStyle = "rgb(" + TH.rgb + ")"; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 8, 0, 6.2832); g.fill(); g.stroke(); g.fillStyle = "rgb(" + TH.rgb + ")"; g.fillText(MX.alias || "YOU", cx + 12, cy + 4);
     if (!list.length) { g.fillStyle = "#3fae62"; g.textAlign = "center"; g.fillText("nothing heard yet", cx, cy + 40); g.textAlign = "left"; }
@@ -279,6 +307,9 @@
     $("mxNote").textContent = "Display only. Nothing here sends anything to the radio. Link health, the forecast and the budget are estimates worked out in this page from what the radio reports.";
     MX.alias = getAlias(); showAlias(); try { applyTheme(localStorage.getItem("mx-theme") || "green"); } catch (e) { applyTheme("green"); }
     $("mxTheme").addEventListener("change", (e) => applyTheme(e.target.value)); $("mxExport").addEventListener("click", exportLog);
+    $("mxCvTopo").addEventListener("click", (e) => { const r = e.target.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 18; (MX.topoHit || []).forEach((h) => { const dd = Math.hypot(h.x - x, h.y - y); if (dd < bd) { bd = dd; best = h; } }); if (best) selectNode(best.id); });
+    $("mxTalk").addEventListener("click", (e) => { const r = e.target.closest("[data-id]") || (e.target.classList.contains("bar") || (e.target.parentElement && e.target.parentElement.classList.contains("bar")) ? (e.target.closest(".bar") || e.target).previousElementSibling : null); if (r && r.dataset.id) selectNode(r.dataset.id); });
+    $("radarList") && $("radarList").addEventListener("click", (e) => { const row = e.target.closest("[data-k]"); if (row) selectNode(row.dataset.k.toLowerCase().slice(0, 6)); });
     $("mxAliasBtn").addEventListener("click", () => askAlias(false));
     $("mxAliasForm").addEventListener("submit", (e) => { e.preventDefault(); if (setAlias($("mxAliasIn").value)) $("mxAliasBox").hidden = true; });
     $("mxAliasBox").addEventListener("keydown", (e) => { if (e.key === "Escape" && MX.alias) $("mxAliasBox").hidden = true; });
