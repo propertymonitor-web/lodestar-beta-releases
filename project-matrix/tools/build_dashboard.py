@@ -6,7 +6,18 @@ import os, sys, re, hashlib
 here = os.path.dirname(os.path.abspath(__file__)); pm = os.path.dirname(here)
 d = lambda *p: os.path.join(pm, "dashboard", *p)
 rd = lambda p: open(p, encoding="utf-8").read()
-VERSION = "1.0.0-beta1"
+VERSION = "1.0.1-beta1"
+
+
+MXBOARD = '''function mxBoardProduct() { let b = ""; try { b = localStorage.getItem("mx-board") || ""; } catch (e) { /* none */ } return b === "r8" ? "matrix_r8" : b === "v3" ? "matrix_v3" : "matrix"; }
+  async function firmwareCheck() {
+    show("work"); reset();
+    if (DASH_ID === "matrix" && !window.mxBoardAsked) {
+      const pick = (b) => { try { localStorage.setItem("mx-board", b); } catch (e) { /* ignore */ } window.mxBoardAsked = true; firmwareCheck(); };
+      setMsg('<span class="big">Which radio is this?</span>Pick the board printed on your radio so the right update file is used. Your choice is remembered.<p>Only the Heltec V4 R2 build is meant for general use; the R8 and V3 builds have not been run on a radio.</p>');
+      setActions([{ label: "Heltec V4 R2", primary: true, run: () => pick("r2") }, { label: "Heltec V4 R8", run: () => pick("r8") }, { label: "Heltec V3", run: () => pick("v3") }, { label: "Back", run: () => show("home") }]);
+      return;
+    }'''
 
 def build():
     h = rd(d("base-otr.html"))
@@ -28,6 +39,9 @@ def build():
     sub('if (f.ed === "orion" && !S.orion) {', 'if (f.ed === "matrix" && !S.orion) S.orion = true;\n  if (f.ed === "orion" && !S.orion) {')
     sub('if (S.frame && S.frame.ed !== "orion") msg =', 'if (S.frame && S.frame.ed !== "orion" && S.frame.ed !== "matrix") msg =')
     sub('const product = (DASH_ID === "otr" || DASH_ID === "cairn") ? DASH_ID :', 'const product = (DASH_ID === "otr" || DASH_ID === "cairn" || DASH_ID === "matrix") ? DASH_ID :')
+    # firmware updates: Matrix has one product per board; the radio cannot tell the page which board it is, so the user picks once (remembered)
+    sub('const product = (DASH_ID === "otr" || DASH_ID === "cairn" || DASH_ID === "matrix") ? DASH_ID :', 'const product = DASH_ID === "matrix" ? mxBoardProduct() : (DASH_ID === "otr" || DASH_ID === "cairn") ? DASH_ID :')
+    sub('async function firmwareCheck() {\n    show("work"); reset();', MXBOARD)
     # radar ping: a hook where the sweep lights a contact, and the tick box at the top of the radar
     sub('if (!reduce && crossed) R.lit.set(k, t);', 'if (!reduce && crossed) { R.lit.set(k, t); if (window.mxPing) window.mxPing(c); }')
     sub('<div class="radargrid">', '<div class="row2 mxpingrow" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><label class="tog" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="mxPingOn"> RADAR PING</label><span class="note" id="mxPingNote" style="color:var(--muted)">a ping each time the sweep passes a heard node, only while the radar is on screen</span></div>\n  <div class="radargrid">')

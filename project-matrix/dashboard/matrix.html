@@ -2768,7 +2768,7 @@ if (S.route.length || S.found.size) fitAll();
 <script id="updates-js">
 (function () {
   "use strict";
-  const DASH_ID = "matrix", DASH_VERSION = "1.0.0-beta1";
+  const DASH_ID = "matrix", DASH_VERSION = "1.0.1-beta1";
   const FW_REPO = "propertymonitor-web/firmware_updates", DASH_REPO = "propertymonitor-web/dashboard_updates";
   const RAW = (repo, path) => "https://raw.githubusercontent.com/" + repo + "/main/" + path;
   const ESPTOOL = "https://cdn.jsdelivr.net/npm/esptool-js@0.5.7/bundle.js";
@@ -2873,8 +2873,15 @@ if (S.route.length || S.found.size) fitAll();
   }
 
   /* ---------------------------------------------------------------- firmware */
+  function mxBoardProduct() { let b = ""; try { b = localStorage.getItem("mx-board") || ""; } catch (e) { /* none */ } return b === "r8" ? "matrix_r8" : b === "v3" ? "matrix_v3" : "matrix"; }
   async function firmwareCheck() {
     show("work"); reset();
+    if (DASH_ID === "matrix" && !window.mxBoardAsked) {
+      const pick = (b) => { try { localStorage.setItem("mx-board", b); } catch (e) { /* ignore */ } window.mxBoardAsked = true; firmwareCheck(); };
+      setMsg('<span class="big">Which radio is this?</span>Pick the board printed on your radio so the right update file is used. Your choice is remembered.<p>Only the Heltec V4 R2 build is meant for general use; the R8 and V3 builds have not been run on a radio.</p>');
+      setActions([{ label: "Heltec V4 R2", primary: true, run: () => pick("r2") }, { label: "Heltec V4 R8", run: () => pick("r8") }, { label: "Heltec V3", run: () => pick("v3") }, { label: "Back", run: () => show("home") }]);
+      return;
+    }
     const f = (typeof S !== "undefined") ? S.frame : null;
     if (typeof S !== "undefined" && S.mode === "demo") { setMsg('<span class="big">Sample data is showing</span>Click Close, then Connect radio to use your own radio, and try again.'); setActions([{ label: "Back", run: () => show("home") }, { label: "Close", run: close }]); return; }
     if (!f || !f.v) { setMsg('<span class="big">Connect your radio first</span>The radio tells this page which firmware it has. Close this, click Connect radio, wait until data appears, then choose Firmware Updates again.'); setActions([{ label: "Back", run: () => show("home") }, { label: "Close", run: close }]); return; }
@@ -2882,7 +2889,7 @@ if (S.route.length || S.found.size) fitAll();
     let m;
     try { m = await getJson(RAW(FW_REPO, "latest.json")); }
     catch (e) { setMsg('<span class="big bad">Could not check</span>' + esc(e.message) + ". Check your internet connection and try again."); setActions([{ label: "Back", run: () => show("home") }, closeBtn]); return; }
-    const product = (DASH_ID === "otr" || DASH_ID === "cairn" || DASH_ID === "matrix") ? DASH_ID : (f.ed === "orion" ? "orion" : "nova");
+    const product = DASH_ID === "matrix" ? mxBoardProduct() : (DASH_ID === "otr" || DASH_ID === "cairn") ? DASH_ID : (f.ed === "orion" ? "orion" : "nova");
     const entry = m.products && m.products[product];
     const unit = f.unit === "mph" ? "mph" : "metric";
     const mine = ver(f.v), latest = entry && ver(entry.version);
