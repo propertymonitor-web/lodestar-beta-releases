@@ -1,0 +1,2 @@
+4bc028b0e2415b25f8dc05ec901470515813d55355ad19defc58878a050eca3d  out/waypost-radio-xiao_s3_wio-usb-merged.bin
+a759e6aaaa2d9cc0888c9c4a4cf81718b551a5fc84946c4afac08ad3dd0ac207  out/waypost-radio-xiao_s3_wio-usb-update.bin
