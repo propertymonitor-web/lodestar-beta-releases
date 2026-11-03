@@ -3,7 +3,7 @@ name: Build stock MeshCore USB companion (radio for a Waypost BBS)
 run-name: "Waypost radio ${{ inputs.board }}"
 
 # The radio that sits next to the Waypost BBS computer needs the MeshCore companion firmware that talks over a USB cable.
-# This builds the stock MeshCore firmware, unmodified, at a pinned commit. The result is a workflow artifact, not a public release.
+# This builds the stock MeshCore firmware, unmodified, at a pinned commit. The result is a workflow artifact and is also committed under waypost-radio/<board>/ (stock firmware only; no BBS code).
 on:
   workflow_dispatch:
     inputs:
@@ -21,7 +21,7 @@ on:
         default: 81dbae592ffad40b4212bc0b37e82b38da08f4bc
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -31,6 +31,7 @@ jobs:
       BOARD: ${{ inputs.board }}
       MC_REF: ${{ inputs.meshcore_ref }}
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - name: Get MeshCore
@@ -67,3 +68,13 @@ jobs:
         with:
           name: waypost-radio-${{ env.BOARD }}
           path: out/
+      - name: Commit the files so they can be fetched with git
+        run: |
+          mkdir -p "waypost-radio/$BOARD"
+          cp out/* "waypost-radio/$BOARD/"
+          git config user.name "waypost-build"
+          git config user.email "waypost-build@users.noreply.github.com"
+          git add "waypost-radio/$BOARD"
+          git commit -m "Waypost radio firmware ($BOARD), stock MeshCore ${MC_REF:0:10}" || exit 0
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+          git push origin "HEAD:${GITHUB_REF_NAME}"
