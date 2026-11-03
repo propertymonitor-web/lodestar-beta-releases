@@ -1,0 +1,2 @@
+c3e04ada3e0a6d3b1623ef58ee48c4bc278dfa9211269f299d5d0abb3580c703  out/waypost-radio-heltec_v3-usb-merged.bin
+9815ddaeac915ab26284b1335655ac969dade873e7e70cc2cc9699a8c1d5d9d0  out/waypost-radio-heltec_v3-usb-update.bin
