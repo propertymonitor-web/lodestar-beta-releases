@@ -20,6 +20,9 @@ Start with the Quick Start Guide.
 
 US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
 
+## Dashboard 1.0.3-beta1
+- **Compass option for the radar.** New tick box "Use this device's compass" above the radar. When it is on, the radar and map under it turn with the compass in the phone or tablet showing the page, so they turn the moment you turn, even standing still. Without it, the radar still follows the GPS course, which only exists while moving. A radio has no compass of its own; this is the direction the phone is facing. iPhones ask for permission. Tested with simulated compass readings in a browser only.
+
 ## Dashboard 1.0.2-beta1
 - **Heading-up radar.** While Follow me is on, the radar turns so the direction you are travelling is at the top (the compass letters, rings and contacts turn with it, and the map under the radar turns too). It uses the GPS course, which only updates while moving, so it holds the last heading when you stop. Tick box above the radar turns it off. Tested with the sample trip in a browser only, not on a radio.
 

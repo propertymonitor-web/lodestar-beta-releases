@@ -1118,7 +1118,8 @@ html.matrix.lite #mxMapRain, html.matrix.lite #rainCv{ display: none !important;
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label for="radarWin" class="note" style="color:var(--muted)">Show contacts heard in the last</label>
         <select id="radarWin" style="padding:8px 10px;max-width:170px"><option value="300000">5 minutes</option><option value="900000" selected>15 minutes</option><option value="3600000">1 hour</option></select>
         <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center"><input type="checkbox" id="radarMapOn" checked> Show map under radar</label>
-        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="While Follow me is on, the radar turns so the way you are travelling is at the top. It uses the GPS course, which only updates while you are moving."><input type="checkbox" id="radarHdgUp" checked> Turn radar with my direction (Follow me)</label></div>
+        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="While Follow me is on, the radar turns so the way you are travelling is at the top. It uses the GPS course, which only updates while you are moving."><input type="checkbox" id="radarHdgUp" checked> Turn radar with my direction (Follow me)</label>
+        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="Uses the compass in the phone or tablet showing this page, so the radar turns as soon as you turn, even standing still. It shows the direction the phone is facing. Needs a device with a compass; on an iPhone it asks permission."><input type="checkbox" id="radarCmp"> Use this device's compass (turns when standing still)</label></div>
       <div class="note" id="radarMapNote" style="color:var(--muted);margin-top:6px" hidden></div>
       <div id="radarList" class="radarlist" style="margin-top:10px"></div>
       <div class="radarleg"><span><b style="color:var(--rep)">&#9679;</b> repeater</span><span><b style="color:var(--comp)">&#9650;</b> companion</span><span><b style="color:var(--room)">&#9670;</b> room server</span><span>solid = position known</span><span>hollow = placed by signal strength</span><span>ring = packet just heard</span></div>
@@ -2553,9 +2554,19 @@ if (S.route.length || S.found.size) fitAll();
   }
   /* heading-up: R.rot (radians) is how far the radar is turned. It follows the GPS course only while Follow me is on and the radio is moving; when it stops it holds the last heading. */
   let hdgPref = true; try { if (localStorage.getItem("orion-radarhdg") === "0") hdgPref = false; } catch (e) { /* default on */ }
+  let cmpPref = false, cmpHdg = null, cmpAt = 0; try { cmpPref = localStorage.getItem("orion-radarcmp") === "1"; } catch (e) { /* default off */ }
+  function cmpEvt(e) {
+    let h = null; if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading; else if (e.absolute && typeof e.alpha === "number") h = 360 - e.alpha;
+    if (h == null || !isFinite(h)) return; const sa = (screen.orientation && screen.orientation.angle) || 0; cmpHdg = ((h + sa) % 360 + 360) % 360; cmpAt = Date.now();
+  }
+  let cmpOn = false;
+  function cmpStart() {
+    if (cmpOn) return; const add = () => { cmpOn = true; window.addEventListener("deviceorientationabsolute", cmpEvt, true); window.addEventListener("deviceorientation", cmpEvt, true); };
+    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") DeviceOrientationEvent.requestPermission().then((r) => { if (r === "granted") add(); }).catch(() => {}); else add();
+  }
   function hdgUpdate() {
-    const gp = S.frame && S.frame.gps, on = hdgPref && !!S.follow && !!gp && !!gp.fix; R.hdgOn = on;
-    if (on && gp.mov && gp.course != null && isFinite(+gp.course)) R.hdg = ((+gp.course % 360) + 360) % 360;
+    const gp = S.frame && S.frame.gps, cmpOk = cmpPref && cmpHdg != null && Date.now() - cmpAt < 5000, on = hdgPref && !!S.follow && (cmpOk || (!!gp && !!gp.fix)); R.hdgOn = on; R.hdgSrc = cmpOk ? "compass" : "gps";
+    if (on && cmpOk) R.hdg = cmpHdg; else if (on && gp.mov && gp.course != null && isFinite(+gp.course)) R.hdg = ((+gp.course % 360) + 360) % 360;
     const target = on ? R.hdg * rad : 0; let dlt = ((target - R.rot + Math.PI) % TAU + TAU) % TAU - Math.PI;
     R.rot = reduce ? target : R.rot + dlt * 0.12; if (Math.abs(dlt) < 0.002) R.rot = target;
     const md = $("radarMapDiv"); if (md) md.style.transform = R.rot ? "rotate(" + (-R.rot * 180 / Math.PI).toFixed(2) + "deg)" : "";
@@ -2601,7 +2612,7 @@ if (S.route.length || S.found.size) fitAll();
     if (!list.length) { g.fillStyle = C.muted; g.font = "bold 15px ui-monospace, Consolas, monospace"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.mode === "off" ? "NO RADIO CONNECTED" : "NO CONTACTS HEARD", cx, cy + rd * 0.4); }
     g.font = "12px ui-monospace, Consolas, monospace"; g.textAlign = "left"; g.textBaseline = "top"; g.fillStyle = C.muted;
     const cnt = (ty) => list.filter((c) => (ty === 3 ? c.n.t >= 3 : c.n.t === ty)).length;
-    g.fillText("REP " + cnt(2) + "  CMP " + cnt(1) + "  RM " + cnt(3), 6, 4); g.textAlign = "right"; g.fillText("RNG " + fmtD(R.range), w - 6, 4); if (R.hdgOn) { g.textBaseline = "bottom"; g.fillText("HDG UP " + Math.round(R.hdg) + "\u00b0", w - 6, w - 4); g.textBaseline = "top"; }
+    g.fillText("REP " + cnt(2) + "  CMP " + cnt(1) + "  RM " + cnt(3), 6, 4); g.textAlign = "right"; g.fillText("RNG " + fmtD(R.range), w - 6, 4); if (R.hdgOn) { g.textBaseline = "bottom"; g.fillText("HDG UP " + Math.round(R.hdg) + "\u00b0" + (R.hdgSrc === "compass" ? " (compass)" : ""), w - 6, w - 4); g.textBaseline = "top"; }
     g.textAlign = "left"; g.textBaseline = "bottom"; g.fillText(reduce ? "STATIC" : "SWEEP " + (PERIOD / 1000).toFixed(1) + "s", 6, w - 4);
     if (t - R.listAt > 1000) { R.listAt = t; fillList(list); }
     R.raf = requestAnimationFrame(frame);
@@ -2688,7 +2699,8 @@ if (S.route.length || S.found.size) fitAll();
     if (ul) { ul.innerHTML = LOG.map((e) => "<li><span class=\"" + (e.up ? "up" : "dn") + "\">" + (e.up ? "HEARD" : "LOST") + "</span><span>" + esc(e.n.n || e.n.k.slice(0, 6)) + " <small>" + (kind[e.n.t] || "node") + "</small></span><time>" + new Date(e.t).toLocaleTimeString([], { hour12: false }) + "</time></li>").join(""); $("clogEmpty").hidden = LOG.length > 0; }
   }
   function init() {
-    R.cv = $("radarCv"); const hu = $("radarHdgUp"); if (hu) { hu.checked = hdgPref; hu.addEventListener("change", () => { hdgPref = hu.checked; try { localStorage.setItem("orion-radarhdg", hdgPref ? "1" : "0"); } catch (e) { /* ok */ } }); }
+    R.cv = $("radarCv"); const hc = $("radarCmp"); if (hc) { hc.checked = cmpPref; if (cmpPref) cmpStart(); hc.addEventListener("change", () => { cmpPref = hc.checked; try { localStorage.setItem("orion-radarcmp", cmpPref ? "1" : "0"); } catch (e) { /* ok */ } if (cmpPref) cmpStart(); }); }
+    const hu = $("radarHdgUp"); if (hu) { hu.checked = hdgPref; hu.addEventListener("change", () => { hdgPref = hu.checked; try { localStorage.setItem("orion-radarhdg", hdgPref ? "1" : "0"); } catch (e) { /* ok */ } }); }
     const sel = $("radarWin"); sel.value = String(R.win);
     const mo = $("radarMapOn"); if (mo) { mo.checked = M.on; mo.addEventListener("change", () => { M.on = mo.checked; try { localStorage.setItem("orion-radarmap", M.on ? "1" : "0"); } catch (e) { /* ok */ } }); }
     sel.addEventListener("change", () => { R.win = +sel.value; try { localStorage.setItem("orion-radarwin", String(R.win)); } catch (e) { /* ok */ } R.lit.clear(); });
@@ -2779,7 +2791,7 @@ if (S.route.length || S.found.size) fitAll();
 <script id="updates-js">
 (function () {
   "use strict";
-  const DASH_ID = "matrix", DASH_VERSION = "1.0.2-beta1";
+  const DASH_ID = "matrix", DASH_VERSION = "1.0.3-beta1";
   const FW_REPO = "propertymonitor-web/firmware_updates", DASH_REPO = "propertymonitor-web/dashboard_updates";
   const RAW = (repo, path) => "https://raw.githubusercontent.com/" + repo + "/main/" + path;
   const ESPTOOL = "https://cdn.jsdelivr.net/npm/esptool-js@0.5.7/bundle.js";

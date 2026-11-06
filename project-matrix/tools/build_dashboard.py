@@ -6,7 +6,7 @@ import os, sys, re, hashlib
 here = os.path.dirname(os.path.abspath(__file__)); pm = os.path.dirname(here)
 d = lambda *p: os.path.join(pm, "dashboard", *p)
 rd = lambda p: open(p, encoding="utf-8").read()
-VERSION = "1.0.2-beta1"
+VERSION = "1.0.3-beta1"
 
 
 MXBOARD = '''function mxBoardProduct() { let b = ""; try { b = localStorage.getItem("mx-board") || ""; } catch (e) { /* none */ } return b === "r8" ? "matrix_r8" : b === "v3" ? "matrix_v3" : "matrix"; }
@@ -47,12 +47,22 @@ def build():
     sub('<div class="radargrid">', '<div class="row2 mxpingrow" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><label class="tog" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="mxPingOn"> RADAR PING</label><span class="note" id="mxPingNote" style="color:var(--muted)">a ping each time the sweep passes a heard node, only while the radar is on screen</span></div>\n  <div class="radargrid">')
     # heading-up radar: while Follow me is on, the radar turns so the direction of travel is at the top
     sub('idx: 0, size: 0 };', 'idx: 0, size: 0, rot: 0, hdg: 0, hdgOn: false };')
-    sub('<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>', '<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>\n        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="While Follow me is on, the radar turns so the way you are travelling is at the top. It uses the GPS course, which only updates while you are moving."><input type="checkbox" id="radarHdgUp" checked> Turn radar with my direction (Follow me)</label>')
+    sub('<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>', '<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>\n        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="While Follow me is on, the radar turns so the way you are travelling is at the top. It uses the GPS course, which only updates while you are moving."><input type="checkbox" id="radarHdgUp" checked> Turn radar with my direction (Follow me)</label>\n        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="Uses the compass in the phone or tablet showing this page, so the radar turns as soon as you turn, even standing still. It shows the direction the phone is facing. Needs a device with a compass; on an iPhone it asks permission."><input type="checkbox" id="radarCmp"> Use this device\'s compass (turns when standing still)</label>')
     sub('  const root = document.documentElement, isTac = () => root.classList.contains("tac");', """  /* heading-up: R.rot (radians) is how far the radar is turned. It follows the GPS course only while Follow me is on and the radio is moving; when it stops it holds the last heading. */
   let hdgPref = true; try { if (localStorage.getItem("orion-radarhdg") === "0") hdgPref = false; } catch (e) { /* default on */ }
+  let cmpPref = false, cmpHdg = null, cmpAt = 0; try { cmpPref = localStorage.getItem("orion-radarcmp") === "1"; } catch (e) { /* default off */ }
+  function cmpEvt(e) {
+    let h = null; if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading; else if (e.absolute && typeof e.alpha === "number") h = 360 - e.alpha;
+    if (h == null || !isFinite(h)) return; const sa = (screen.orientation && screen.orientation.angle) || 0; cmpHdg = ((h + sa) % 360 + 360) % 360; cmpAt = Date.now();
+  }
+  let cmpOn = false;
+  function cmpStart() {
+    if (cmpOn) return; const add = () => { cmpOn = true; window.addEventListener("deviceorientationabsolute", cmpEvt, true); window.addEventListener("deviceorientation", cmpEvt, true); };
+    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") DeviceOrientationEvent.requestPermission().then((r) => { if (r === "granted") add(); }).catch(() => {}); else add();
+  }
   function hdgUpdate() {
-    const gp = S.frame && S.frame.gps, on = hdgPref && !!S.follow && !!gp && !!gp.fix; R.hdgOn = on;
-    if (on && gp.mov && gp.course != null && isFinite(+gp.course)) R.hdg = ((+gp.course % 360) + 360) % 360;
+    const gp = S.frame && S.frame.gps, cmpOk = cmpPref && cmpHdg != null && Date.now() - cmpAt < 5000, on = hdgPref && !!S.follow && (cmpOk || (!!gp && !!gp.fix)); R.hdgOn = on; R.hdgSrc = cmpOk ? "compass" : "gps";
+    if (on && cmpOk) R.hdg = cmpHdg; else if (on && gp.mov && gp.course != null && isFinite(+gp.course)) R.hdg = ((+gp.course % 360) + 360) % 360;
     const target = on ? R.hdg * rad : 0; let dlt = ((target - R.rot + Math.PI) % TAU + TAU) % TAU - Math.PI;
     R.rot = reduce ? target : R.rot + dlt * 0.12; if (Math.abs(dlt) < 0.002) R.rot = target;
     const md = $("radarMapDiv"); if (md) md.style.transform = R.rot ? "rotate(" + (-R.rot * 180 / Math.PI).toFixed(2) + "deg)" : "";
@@ -64,8 +74,8 @@ def build():
     sub('forEach((d) => { const r = d[1] * rad;', 'forEach((d) => { const r = d[1] * rad - R.rot;')
     sub('let a = c.ang % TAU; if (a < 0) a += TAU;', 'const ca = c.ang - R.rot; let a = ca % TAU; if (a < 0) a += TAU;')
     sub('const x = cx + Math.sin(c.ang) * c.frac * rd, y = cy - Math.cos(c.ang) * c.frac * rd,', 'const x = cx + Math.sin(ca) * c.frac * rd, y = cy - Math.cos(ca) * c.frac * rd,')
-    sub('g.fillText("RNG " + fmtD(R.range), w - 6, 4);', 'g.fillText("RNG " + fmtD(R.range), w - 6, 4); if (R.hdgOn) { g.textBaseline = "bottom"; g.fillText("HDG UP " + Math.round(R.hdg) + "\\u00b0", w - 6, w - 4); g.textBaseline = "top"; }')
-    sub('R.cv = $("radarCv"); const sel = $("radarWin");', 'R.cv = $("radarCv"); const hu = $("radarHdgUp"); if (hu) { hu.checked = hdgPref; hu.addEventListener("change", () => { hdgPref = hu.checked; try { localStorage.setItem("orion-radarhdg", hdgPref ? "1" : "0"); } catch (e) { /* ok */ } }); }\n    const sel = $("radarWin");')
+    sub('g.fillText("RNG " + fmtD(R.range), w - 6, 4);', 'g.fillText("RNG " + fmtD(R.range), w - 6, 4); if (R.hdgOn) { g.textBaseline = "bottom"; g.fillText("HDG UP " + Math.round(R.hdg) + "\\u00b0" + (R.hdgSrc === "compass" ? " (compass)" : ""), w - 6, w - 4); g.textBaseline = "top"; }')
+    sub('R.cv = $("radarCv"); const sel = $("radarWin");', 'R.cv = $("radarCv"); const hc = $("radarCmp"); if (hc) { hc.checked = cmpPref; if (cmpPref) cmpStart(); hc.addEventListener("change", () => { cmpPref = hc.checked; try { localStorage.setItem("orion-radarcmp", cmpPref ? "1" : "0"); } catch (e) { /* ok */ } if (cmpPref) cmpStart(); }); }\n    const hu = $("radarHdgUp"); if (hu) { hu.checked = hdgPref; hu.addEventListener("change", () => { hdgPref = hu.checked; try { localStorage.setItem("orion-radarhdg", hdgPref ? "1" : "0"); } catch (e) { /* ok */ } }); }\n    const sel = $("radarWin");')
     sub("<!--TAC-HTML-END-->", rd(d("addon", "deck.html")) + "\n<!--TAC-HTML-END-->")
     i = h.rindex("</body>")
     h = h[:i] + "<script id=\"matrix-js\">\n" + rd(d("addon", "matrix.js")) + "</script>\n" + h[i:]
