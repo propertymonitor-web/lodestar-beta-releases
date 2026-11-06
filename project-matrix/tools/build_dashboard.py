@@ -6,7 +6,7 @@ import os, sys, re, hashlib
 here = os.path.dirname(os.path.abspath(__file__)); pm = os.path.dirname(here)
 d = lambda *p: os.path.join(pm, "dashboard", *p)
 rd = lambda p: open(p, encoding="utf-8").read()
-VERSION = "1.1.0-beta1"
+VERSION = "1.1.1-beta1"
 
 
 MXBOARD = '''function mxBoardProduct() { let b = ""; try { b = localStorage.getItem("mx-board") || ""; } catch (e) { /* none */ } return b === "r8" ? "matrix_r8" : b === "v3" ? "matrix_v3" : "matrix"; }
@@ -45,6 +45,8 @@ def build():
     # radar ping: a hook where the sweep lights a contact, and the tick box at the top of the radar
     sub('if (!reduce && crossed) R.lit.set(k, t);', 'if (!reduce && crossed) { R.lit.set(k, t); if (window.mxPing) window.mxPing(c); }')
     sub('<div class="radargrid">', '<div class="row2 mxpingrow" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><label class="tog" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="mxPingOn"> RADAR PING</label><span class="note" id="mxPingNote" style="color:var(--muted)">a ping each time the sweep passes a heard node, only while the radar is on screen</span></div>\n  <div class="radargrid">')
+    # lets a phone put the dashboard on its home screen as an app (the manifest and icons live next to the hosted copy)
+    sub("</head>", '<link rel="manifest" href="matrix.webmanifest">\n<meta name="theme-color" content="#060e08">\n<link rel="icon" href="matrix-icon-192.png">\n</head>')
     # trace replay (1.1.0): a button in the map bar and a full-screen player
     sub('<button id="btnFit">Show everything</button>', '<button id="btnFit">Show everything</button>\n          <button id="btnReplay" title="Full-screen replay of the last trip: the route, the stops and the nodes heard along the way">Replay last trace</button>')
     # heading-up radar: while Follow me is on, the radar turns so the direction of travel is at the top

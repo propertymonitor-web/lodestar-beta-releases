@@ -20,6 +20,9 @@ Start with the Quick Start Guide.
 
 US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
 
+## Dashboard 1.1.1-beta1
+- **Phone home-screen icon.** When the dashboard is opened from its hosted web address in Chrome on Android, Chrome's menu offers Install app / Add to Home screen with a Matrix icon. A copy opened from a file does not get this. Not tested on a phone.
+
 ## Dashboard 1.1.0-beta1
 - **Replay last trace.** New button in the map bar. It opens a full-screen map that starts close up on the first point of the last recorded trip (zoom is adjustable) and replays the route. Where the radio stood still the marker waits, and a banner shows how long the stop was; each stop stays marked on the map. Repeaters, companions and room servers appear when they were first heard, and hovering one shows its name and radio ID. Speed, pause, restart and a position slider are included, plus a "Hurry through stops" option. Stops are gaps of 30 seconds or more between recorded points, so a gap with no GPS fix also looks like a stop. Tested with simulated data in a browser only, not on a radio. The offline map is used if one is loaded, otherwise the online map.
 

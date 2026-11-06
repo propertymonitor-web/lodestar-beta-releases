@@ -1097,6 +1097,9 @@ html.matrix.lite #mxMapRain, html.matrix.lite #rainCv{ display: none !important;
 @media (prefers-reduced-motion: reduce) { #rpOv * { transition: none !important; } }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap">
+<link rel="manifest" href="matrix.webmanifest">
+<meta name="theme-color" content="#060e08">
+<link rel="icon" href="matrix-icon-192.png">
 </head>
 <body>
 <div id="mxSplash" role="dialog" aria-label="Project Matrix">
@@ -2812,7 +2815,7 @@ if (S.route.length || S.found.size) fitAll();
 <script id="updates-js">
 (function () {
   "use strict";
-  const DASH_ID = "matrix", DASH_VERSION = "1.1.0-beta1";
+  const DASH_ID = "matrix", DASH_VERSION = "1.1.1-beta1";
   const FW_REPO = "propertymonitor-web/firmware_updates", DASH_REPO = "propertymonitor-web/dashboard_updates";
   const RAW = (repo, path) => "https://raw.githubusercontent.com/" + repo + "/main/" + path;
   const ESPTOOL = "https://cdn.jsdelivr.net/npm/esptool-js@0.5.7/bundle.js";
