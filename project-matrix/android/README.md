@@ -3,7 +3,7 @@
 Opens the Matrix+MNA dashboard in its own app (own icon) and talks to the radio over the phone's USB port with a
 native USB serial driver, so it does not depend on Chrome's Web Serial. BLE stays free for the MeshCore app.
 
-**Status: not yet tested on a real phone or radio.** Built from the same matrix.html as the web dashboard.
+**Status: tested on a phone with the Heltec V4 R2 (works). Not tested with other radios.** Built from the same matrix.html as the web dashboard.
 
 Credit: Engineered by Aries Thorne & Todd Steinhauer for Wolf Reactive Systems (WRS). Special thanks to the NTXMESH
 community, Meshcore Community, and Pat Steinhauer-Scates for their guidance and support.
