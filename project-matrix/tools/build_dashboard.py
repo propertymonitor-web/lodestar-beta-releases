@@ -6,7 +6,7 @@ import os, sys, re, hashlib
 here = os.path.dirname(os.path.abspath(__file__)); pm = os.path.dirname(here)
 d = lambda *p: os.path.join(pm, "dashboard", *p)
 rd = lambda p: open(p, encoding="utf-8").read()
-VERSION = "1.0.3-beta1"
+VERSION = "1.1.0-beta1"
 
 
 MXBOARD = '''function mxBoardProduct() { let b = ""; try { b = localStorage.getItem("mx-board") || ""; } catch (e) { /* none */ } return b === "r8" ? "matrix_r8" : b === "v3" ? "matrix_v3" : "matrix"; }
@@ -45,6 +45,8 @@ def build():
     # radar ping: a hook where the sweep lights a contact, and the tick box at the top of the radar
     sub('if (!reduce && crossed) R.lit.set(k, t);', 'if (!reduce && crossed) { R.lit.set(k, t); if (window.mxPing) window.mxPing(c); }')
     sub('<div class="radargrid">', '<div class="row2 mxpingrow" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><label class="tog" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="mxPingOn"> RADAR PING</label><span class="note" id="mxPingNote" style="color:var(--muted)">a ping each time the sweep passes a heard node, only while the radar is on screen</span></div>\n  <div class="radargrid">')
+    # trace replay (1.1.0): a button in the map bar and a full-screen player
+    sub('<button id="btnFit">Show everything</button>', '<button id="btnFit">Show everything</button>\n          <button id="btnReplay" title="Full-screen replay of the last trip: the route, the stops and the nodes heard along the way">Replay last trace</button>')
     # heading-up radar: while Follow me is on, the radar turns so the direction of travel is at the top
     sub('idx: 0, size: 0 };', 'idx: 0, size: 0, rot: 0, hdg: 0, hdgOn: false };')
     sub('<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>', '<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>\n        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="While Follow me is on, the radar turns so the way you are travelling is at the top. It uses the GPS course, which only updates while you are moving."><input type="checkbox" id="radarHdgUp" checked> Turn radar with my direction (Follow me)</label>\n        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="Uses the compass in the phone or tablet showing this page, so the radar turns as soon as you turn, even standing still. It shows the direction the phone is facing. Needs a device with a compass; on an iPhone it asks permission."><input type="checkbox" id="radarCmp"> Use this device\'s compass (turns when standing still)</label>')
@@ -78,7 +80,7 @@ def build():
     sub('R.cv = $("radarCv"); const sel = $("radarWin");', 'R.cv = $("radarCv"); const hc = $("radarCmp"); if (hc) { hc.checked = cmpPref; if (cmpPref) cmpStart(); hc.addEventListener("change", () => { cmpPref = hc.checked; try { localStorage.setItem("orion-radarcmp", cmpPref ? "1" : "0"); } catch (e) { /* ok */ } if (cmpPref) cmpStart(); }); }\n    const hu = $("radarHdgUp"); if (hu) { hu.checked = hdgPref; hu.addEventListener("change", () => { hdgPref = hu.checked; try { localStorage.setItem("orion-radarhdg", hdgPref ? "1" : "0"); } catch (e) { /* ok */ } }); }\n    const sel = $("radarWin");')
     sub("<!--TAC-HTML-END-->", rd(d("addon", "deck.html")) + "\n<!--TAC-HTML-END-->")
     i = h.rindex("</body>")
-    h = h[:i] + "<script id=\"matrix-js\">\n" + rd(d("addon", "matrix.js")) + "</script>\n" + h[i:]
+    h = h[:i] + "<script id=\"matrix-js\">\n" + rd(d("addon", "matrix.js")) + "</script>\n<script id=\"replay-js\">\n" + rd(d("addon", "replay.js")) + "</script>\n" + h[i:]
     return h
 
 out = build()

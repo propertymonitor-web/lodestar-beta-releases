@@ -20,6 +20,9 @@ Start with the Quick Start Guide.
 
 US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
 
+## Dashboard 1.1.0-beta1
+- **Replay last trace.** New button in the map bar. It opens a full-screen map that starts close up on the first point of the last recorded trip (zoom is adjustable) and replays the route. Where the radio stood still the marker waits, and a banner shows how long the stop was; each stop stays marked on the map. Repeaters, companions and room servers appear when they were first heard, and hovering one shows its name and radio ID. Speed, pause, restart and a position slider are included, plus a "Hurry through stops" option. Stops are gaps of 30 seconds or more between recorded points, so a gap with no GPS fix also looks like a stop. Tested with simulated data in a browser only, not on a radio. The offline map is used if one is loaded, otherwise the online map.
+
 ## Dashboard 1.0.3-beta1
 - **Compass option for the radar.** New tick box "Use this device's compass" above the radar. When it is on, the radar and map under it turn with the compass in the phone or tablet showing the page, so they turn the moment you turn, even standing still. Without it, the radar still follows the GPS course, which only exists while moving. A radio has no compass of its own; this is the direction the phone is facing. iPhones ask for permission. Tested with simulated compass readings in a browser only.
 

@@ -96,3 +96,23 @@ html.matrix button.primary, html.matrix #btnConnect{ background: var(--accent) !
 #mxWinBody table{ border-collapse: collapse; font: 12.5px var(--mono); margin-top: 6px; } #mxWinBody td, #mxWinBody th{ padding: 2px 10px 2px 0; text-align: left; font-weight: 400; } #mxWinBody th{ color: var(--muted); }
 #mxWinBody .big{ font: 700 28px var(--mono); color: var(--accent); } #mxWinBody .sub{ color: var(--ink2); font-size: 13px; margin-top: 2px; }
 html.matrix.lite #mxMapRain, html.matrix.lite #rainCv{ display: none !important; } html.matrix.lite .panel, html.matrix.lite .card{ box-shadow: none; }
+
+/* ---- trace replay (1.1.0) ---- */
+#rpOv { position: fixed; inset: 0; z-index: 6000; background: #0a120c; }
+#rpOv[hidden] { display: none; }
+#rpMap { position: absolute; inset: 0; }
+#rpBar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1000; background: rgba(8, 16, 10, .92); color: #d7f5df; padding: 10px 14px 12px; border-top: 1px solid #1c5a30; font: 14px/1.4 system-ui, sans-serif; }
+#rpBar .rpRow { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 8px; }
+#rpBar button { min-height: 40px; padding: 6px 14px; background: #0f2a18; color: #d7f5df; border: 1px solid #2f8f4f; border-radius: 4px; font: inherit; cursor: pointer; }
+#rpBar button:hover { background: #164025; }
+#rpBar select, #rpBar input[type=range] { accent-color: #3fdc7a; }
+#rpBar select { background: #0f2a18; color: #d7f5df; border: 1px solid #2f8f4f; border-radius: 4px; min-height: 36px; }
+#rpScrub { width: 100%; margin: 0 0 6px; }
+#rpTime { margin-left: auto; font-variant-numeric: tabular-nums; }
+#rpBar .rpKey { font-size: 13px; color: #a9d8b6; }
+.rpRm, .rpStopSw { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: -1px; border: 1px solid #fff; }
+.rpRm { background: #8b3fb8; } .rpStopSw { background: #ffb000; border-color: #c26a00; }
+#rpStop { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1000; background: #ffb000; color: #1a1200; font: 700 16px/1 system-ui, sans-serif; padding: 10px 16px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0, 0, 0, .4); }
+#rpStop[hidden] { display: none; }
+.rpTip { font: 13px/1.4 system-ui, sans-serif; }
+@media (prefers-reduced-motion: reduce) { #rpOv * { transition: none !important; } }
