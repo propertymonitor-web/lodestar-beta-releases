@@ -20,6 +20,9 @@ Start with the Quick Start Guide.
 
 US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
 
+## Dashboard 1.0.2-beta1
+- **Heading-up radar.** While Follow me is on, the radar turns so the direction you are travelling is at the top (the compass letters, rings and contacts turn with it, and the map under the radar turns too). It uses the GPS course, which only updates while moving, so it holds the last heading when you stop. Tick box above the radar turns it off. Tested with the sample trip in a browser only, not on a radio.
+
 ## Honest limits
 - Nothing here has been run on a real radio by its makers. The firmware builds and the dashboard was tested with sample data in a browser.
 - The Heltec V4 R2 is the intended radio. The V4 R8 and V3 builds only prove that the code compiles for them.
