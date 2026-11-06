@@ -12,8 +12,8 @@
   const dur = (ms) => { const s = Math.round(ms / 1000); if (s < 60) return s + " s"; const m = Math.floor(s / 60); return m < 60 ? m + " min " + (s % 60) + " s" : Math.floor(m / 60) + " h " + (m % 60) + " min"; };
   const note = (t) => { const n = $r("mapNote"); if (n) { n.hidden = false; n.textContent = t; } };
 
-  function prep() {
-    const R = (S.route || []).filter((p) => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1]));
+  function prep(src) {
+    const R = ((src && src.route) || S.route || []).filter((p) => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1]));
     if (R.length < 2) return false;
     RP.pts = R.map((p) => [p[0], p[1]]);
     let prev = isFinite(R[0][2]) ? R[0][2] * 1000 : Date.now() - R.length * 1000;
@@ -22,7 +22,8 @@
     RP.stops = [];
     for (let i = 0; i < RP.tt.length - 1; i++) { const gap = RP.tt[i + 1] - RP.tt[i]; if (gap >= STOP_MS) RP.stops.push({ a: RP.tt[i], b: RP.tt[i + 1], pos: RP.pts[i] }); }
     RP.nodes = [];
-    S.found.forEach((n) => {
+    ((src && src.found) || Array.from(S.found.values())).forEach((n) => {
+      if (!n || n.k == null) return;
       if (n.t !== 1 && n.t !== 2 && n.t !== 3) return; const pos = nodePos(n); if (!pos) return;
       if (n.first && n.first > RP.t1 + 60000) return;                // first heard after this trip ended
       RP.nodes.push({ n, pos, at: n.first && n.first > RP.t0 ? n.first : RP.t0 });
@@ -112,9 +113,9 @@
     $r("rpClose").addEventListener("click", close);
     ov.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); else if (e.key === " " && e.target === ov) { e.preventDefault(); $r("rpPlay").click(); } });
   }
-  function open() {
+  function open(src) {
     if (!window.L) { note("The map library did not load, so the replay cannot start."); return; }
-    if (!prep()) { note("Nothing to replay yet: drive or walk a little with the radio so a route is recorded."); return; }
+    if (!prep(src)) { note("Nothing to replay yet: drive or walk a little with the radio so a route is recorded."); return; }
     build(); RP.opener = document.activeElement; RP.ov.hidden = false; document.body.style.overflow = "hidden";
     if (RP.map) { RP.map.remove(); RP.map = null; }
     RP.nodes.forEach((o) => { o.mk = null; }); RP.stops.forEach((s) => { s.mk = null; });
@@ -134,6 +135,34 @@
     if (RP.map) { RP.map.remove(); RP.map = null; }
     if (RP.opener && RP.opener.focus) RP.opener.focus();
   }
-  const b = document.getElementById("btnReplay"); if (b) b.addEventListener("click", open);
+  /* ---- share the trace as a file, and open one from another device ---- */
+  function traceFile() {
+    const nodes = Array.from(S.found.values()).map((n) => ({ k: n.k, t: n.t, n: n.n, alat: n.alat, alon: n.alon, hlat: n.hlat, hlon: n.hlon, rs: n.rs, sn: n.sn, hop: n.hop, c: n.c, first: n.first, last: n.last }));
+    const body = JSON.stringify({ lodestarTrace: 1, exported: new Date().toISOString(), route: S.route, found: nodes });
+    const name = "lodestar-trace-" + new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-") + ".lodestar-trace.json";
+    return { name, body };
+  }
+  async function shareTrace() {
+    if (!S.route || S.route.length < 2) { note("Nothing to share yet: there is no recorded route."); return; }
+    const t = traceFile();
+    try {
+      const f = new File([t.body], t.name, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "Lodestar trace" }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; /* sharing failed: save the file instead */ }
+    saveFile(t.name, "application/json", t.body); note("Saved " + t.name + " to your downloads. Send it to the other device, then use Open a trace file there.");
+  }
+  function openFile(file) {
+    const rd = new FileReader();
+    rd.onload = () => {
+      let j; try { j = JSON.parse(rd.result); } catch (e) { note("That file is not a Lodestar trace (it could not be read)."); return; }
+      if (!j || j.lodestarTrace !== 1 || !Array.isArray(j.route)) { note("That file is not a Lodestar trace."); return; }
+      open({ route: j.route, found: Array.isArray(j.found) ? j.found : [] });
+    };
+    rd.onerror = () => note("That file could not be read."); rd.readAsText(file);
+  }
+  const b = document.getElementById("btnReplay"); if (b) b.addEventListener("click", () => open());
+  const bs = document.getElementById("btnTraceShare"); if (bs) bs.addEventListener("click", shareTrace);
+  const bo = document.getElementById("btnTraceOpen"), fi = document.getElementById("traceFile");
+  if (bo && fi) { bo.addEventListener("click", () => fi.click()); fi.addEventListener("change", () => { if (fi.files && fi.files[0]) openFile(fi.files[0]); fi.value = ""; }); }
   window.PM_REPLAY = { open, close };
 })();

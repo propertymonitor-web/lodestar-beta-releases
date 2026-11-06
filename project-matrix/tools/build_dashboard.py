@@ -6,7 +6,7 @@ import os, sys, re, hashlib
 here = os.path.dirname(os.path.abspath(__file__)); pm = os.path.dirname(here)
 d = lambda *p: os.path.join(pm, "dashboard", *p)
 rd = lambda p: open(p, encoding="utf-8").read()
-VERSION = "1.1.1-beta1"
+VERSION = "1.2.0-beta1"
 
 
 MXBOARD = '''function mxBoardProduct() { let b = ""; try { b = localStorage.getItem("mx-board") || ""; } catch (e) { /* none */ } return b === "r8" ? "matrix_r8" : b === "v3" ? "matrix_v3" : "matrix"; }
@@ -48,7 +48,7 @@ def build():
     # lets a phone put the dashboard on its home screen as an app (the manifest and icons live next to the hosted copy)
     sub("</head>", '<link rel="manifest" href="matrix.webmanifest">\n<meta name="theme-color" content="#060e08">\n<link rel="icon" href="matrix-icon-192.png">\n</head>')
     # trace replay (1.1.0): a button in the map bar and a full-screen player
-    sub('<button id="btnFit">Show everything</button>', '<button id="btnFit">Show everything</button>\n          <button id="btnReplay" title="Full-screen replay of the last trip: the route, the stops and the nodes heard along the way">Replay last trace</button>')
+    sub('<button id="btnFit">Show everything</button>', '<button id="btnFit">Show everything</button>\n          <button id="btnReplay" title="Full-screen replay of the last trip: the route, the stops and the nodes heard along the way">Replay last trace</button>\n          <button id="btnTraceShare" title="Send the recorded route and the nodes heard to another device (for example your laptop) as a file">Share trace</button>\n          <button id="btnTraceOpen" title="Open a trace file made on another device and replay it here">Open a trace file</button><input type="file" id="traceFile" accept=".json,application/json" hidden>')
     # heading-up radar: while Follow me is on, the radar turns so the direction of travel is at the top
     sub('idx: 0, size: 0 };', 'idx: 0, size: 0, rot: 0, hdg: 0, hdgOn: false };')
     sub('<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>', '<input type="checkbox" id="radarMapOn" checked> Show map under radar</label>\n        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="While Follow me is on, the radar turns so the way you are travelling is at the top. It uses the GPS course, which only updates while you are moving."><input type="checkbox" id="radarHdgUp" checked> Turn radar with my direction (Follow me)</label>\n        <label class="note" style="color:var(--muted);display:flex;gap:6px;align-items:center" title="Uses the compass in the phone or tablet showing this page, so the radar turns as soon as you turn, even standing still. It shows the direction the phone is facing. Needs a device with a compass; on an iPhone it asks permission."><input type="checkbox" id="radarCmp"> Use this device\'s compass (turns when standing still)</label>')

@@ -20,6 +20,9 @@ Start with the Quick Start Guide.
 
 US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
 
+## Dashboard 1.2.0-beta1
+- **Share a trace between devices.** "Share trace" packs the recorded route and the nodes heard into one file and opens the phone's share sheet (or saves the file when sharing is not available). "Open a trace file" on another device, such as the laptop, loads that file straight into the replay. Tested with a saved file and a second browser page only, not between a phone and a laptop.
+
 ## Dashboard 1.1.1-beta1
 - **Phone home-screen icon.** When the dashboard is opened from its hosted web address in Chrome on Android, Chrome's menu offers Install app / Add to Home screen with a Matrix icon. A copy opened from a file does not get this. Not tested on a phone.
 
