@@ -43,3 +43,6 @@ US and UK/EU differ only in the speed unit. The radio region (frequency) is set 
 
 Engineered by: Aries Thorne & Todd Steinhauer for Wolf Reactive Systems (WRS)
 Special thanks to the NTXMESH community, Meshcore Community, and Pat Steinhauer-Scates for their guidance and support.
+
+## Android app (1.2.0-app1)
+`matrix_project_beta/Matrix-MNA-dashboard.apk`, also inside each radio zip: the dashboard as an Android app that connects over USB with its own driver. Not yet tested on a phone.
