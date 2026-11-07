@@ -9,7 +9,9 @@
 import os, sys, re, hashlib
 here = os.path.dirname(os.path.abspath(__file__)); pm = os.path.dirname(here)
 d = lambda *p: os.path.join(pm, "dashboard", *p)
-rd = lambda p: open(p, encoding="utf-8").read()
+def rd(p):
+    with open(p, encoding="utf-8") as f:
+        return f.read()
 VERSION = "1.2.0-beta1"
 
 
@@ -33,7 +35,7 @@ def build():
     sub("ORION TACTICAL RADIO<small>OTR by LODESTAR</small>", "PROJECT MATRIX<small>By: Aries Thorne &middot; For: Matrix Comm. Systems</small>")
     sub('"OTR - Orion Tactical Radio"', '"PROJECT MATRIX"')
     sub('<title>OTR - Orion Tactical Radio</title>', '<title>PROJECT MATRIX</title>')
-    h = re.sub(r'(<meta name="description" content=")[^"]*"', r'\1PROJECT MATRIX: live dashboard for a Matrix companion radio, read over USB. By Aries Thorne for Matrix Comm. Systems."', h, 1)
+    h = re.sub(r'(<meta name="description" content=")[^"]*"', r'\1PROJECT MATRIX: live dashboard for a Matrix companion radio, read over USB. By Aries Thorne for Matrix Comm. Systems."', h, count=1)
     sub('<h1 class="brand">LODESTAR NOVA<small>companion dashboard</small></h1>', '<h1 class="brand">PROJECT MATRIX<small>By: Aries Thorne &middot; For: Matrix Comm. Systems</small></h1>')
     sub('const DASH_ID = "otr", DASH_VERSION = "1.4.0";', 'const DASH_ID = "matrix", DASH_VERSION = "%s";' % VERSION)
     sub("</head>", "<style id=\"matrix-css\">\n" + rd(d("addon", "matrix.css")) + "</style>\n<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap\">\n</head>")
@@ -97,4 +99,5 @@ if "--check" in sys.argv:
         if need not in out: sys.exit("missing: " + need)
     print("matrix.html ok", len(out), hashlib.sha256(out.encode()).hexdigest()[:12])
 else:
-    open(d("matrix.html"), "w", encoding="utf-8").write(out); print("wrote dashboard/matrix.html", len(out))
+    with open(d("matrix.html"), "w", encoding="utf-8") as f: f.write(out)
+    print("wrote dashboard/matrix.html", len(out))

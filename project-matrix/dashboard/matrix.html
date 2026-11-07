@@ -3028,7 +3028,7 @@ if (S.route.length || S.found.size) fitAll();
   "use strict";
   const root = document.documentElement, MX = { d: null, hist: [], air: [], seenRec: new WeakSet(), alerts: [], lastHeard: Date.now(), cool: {}, nfSeen: new Set() };
   const TH = { rgb: "0,255,65", hi: "#d8ffe4" };
-  const G = "#00ff41", G2 = "#7fe79b", DIM = "#0f4a22", Y = "#ffe44d", R = "#ff3b3b", C = "#4dffd2";
+  const G = "#00ff41", DIM = "#0f4a22", Y = "#ffe44d", C = "#4dffd2";
   const opt = (k, d) => { try { const v = localStorage.getItem("mx-" + k); return v === null ? d : v === "1"; } catch (e) { return d; } };
   const setOpt = (k, v) => { try { localStorage.setItem("mx-" + k, v ? "1" : "0"); } catch (e) { /* none */ } };
   root.dataset.theme = "dark";
@@ -3103,7 +3103,7 @@ if (S.route.length || S.found.size) fitAll();
   }
   function health() {
     const f = S.frame, l = f && f.links ? f.links : [], best = l.find((x) => x.best) || l.slice().sort((a, b) => b.sc - a.sc)[0], d = MX.d;
-    let s = best ? best.sc : 0, parts = [];
+    let s = best ? best.sc : 0;
     const nf = d ? d.nf : (MESH.nf.length ? MESH.nf[MESH.nf.length - 1].v : null);
     let pen = 0; if (nf != null && nf !== 0) { pen = Math.max(0, Math.min(25, (nf + 105) * 2.5)); }
     const bat = f && f.bat && f.bat.pct >= 0 ? f.bat.pct : 100; const bpen = bat < 25 ? (25 - bat) / 2 : 0;
@@ -3188,7 +3188,7 @@ if (S.route.length || S.found.size) fitAll();
     // range records
     { const me = f && f.gps && f.gps.fix ? [f.gps.lat, f.gps.lon] : null; let far = null, farRep = null, farD = 0, farRD = 0;
       if (S.found) S.found.forEach((n) => { if (n.alat == null) return; const o = me || (n.hlat != null ? [n.hlat, n.hlon] : null); if (!o) return; const m = meters(o, [n.alat, n.alon]); if (m > farD) { farD = m; far = n; } if (n.t === 2 && m > farRD) { farRD = m; farRep = n; } });
-      let bR = null, bS = null, hops = 0, hopr = null; rs.forEach((r) => { if (r.tx) return; if (!bR || r.rssi > bR.rssi) bR = r; if (!bS || r.snr > bS.snr) bS = r; if (r.hops > hops) { hops = r.hops; hopr = r; } });
+      let bR = null, bS = null, hops = 0; rs.forEach((r) => { if (r.tx) return; if (!bR || r.rssi > bR.rssi) bR = r; if (!bS || r.snr > bS.snr) bS = r; if (r.hops > hops) hops = r.hops; });
       const wR = rs.filter((r) => !r.tx).reduce((a, r) => (a == null || r.rssi < a.rssi ? r : a), null);
       const km = (m) => (m >= 1000 ? (m / 1000).toFixed(2) + " km" : Math.round(m) + " m"), nm = (n) => (n ? (n.n || n.k.slice(0, 8)) : "");
       kvset("mxRecs", [["farthest node", far ? km(farD) + " " + nm(far) : "--"], ["farthest repeater", farRep ? km(farRD) + " " + nm(farRep) : "--"], ["strongest signal", bR ? bR.rssi + " dBm" : "--"], ["weakest signal", wR ? wR.rssi + " dBm" : "--"], ["best SNR", bS ? bS.snr.toFixed(1) + " dB" : "--"], ["deepest path", hops ? hops + " hops" : "--"], ["nodes known", S.found ? String(S.found.size) : "0"]]); }
@@ -3303,7 +3303,7 @@ if (S.route.length || S.found.size) fitAll();
   }
   const median = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
   function drawNode() {
-    if (MX.scanning) return; const el = $("mxNodeBody"), id = MX.sel; if (!id) return; const now = Date.now(), rs = recsNow(), nm = meshNameFor(id), hack = MX.mode === "hack";
+    if (MX.scanning) return; const el = $("mxNodeBody"), id = MX.sel; if (!id) return; const rs = recsNow(), nm = meshNameFor(id), hack = MX.mode === "hack";
     const via = rs.filter((r) => !r.tx && r.id === id), orig = rs.filter((r) => !r.tx && r.src === id && r.src !== r.id), all = via.concat(orig).sort((a, b) => a.t - b.t);
     const known = S.found && [...S.found.values()].find((n) => n.k.toLowerCase().startsWith(id)), f = S.frame, me = f && f.gps && f.gps.fix ? [f.gps.lat, f.gps.lon] : null;
     const hops = via.map((r) => r.hops), mn = hops.length ? Math.min.apply(null, hops) : null, mxh = hops.length ? Math.max.apply(null, hops) : null, avg = hops.length ? hops.reduce((a, b) => a + b, 0) / hops.length : null;
