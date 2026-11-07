@@ -2,10 +2,10 @@
 
 PROJECT MATRIX. By: Aries Thorne. For: Matrix Comm. Systems.
 
-A companion radio firmware with a Matrix-style dashboard. **Beta 1. Not yet tested on a real radio.**
+A companion radio firmware with a Matrix-style dashboard. **Beta. Used by its makers on a real Heltec V4 R2 (computer browser and Android app). Not tested on the V4 R8 or V3.**
 
 ## Download
-Get **`LODESTAR-MATRIX-PROJECT-Heltec-V4-R2-beta.zip`** (or the R8 or V3 zip, both untested). Each holds the User's Manual (PDF), a Quick Start Guide, a README, the dashboard (`matrix.html`) and the firmware.
+Get **`LODESTAR-MATRIX-PROJECT-Heltec-V4-R2-beta.zip`** (or the R8 or V3 zip, both untested). Each holds the User's Manual (PDF), a Quick Start Guide, a README, the dashboard (`matrix.html`), the Android app (`Matrix-MNA-dashboard.apk`) and the firmware. The manual and Quick Start were updated for dashboard 1.2.0 and the Android app.
 
 Start with the Quick Start Guide.
 
@@ -17,11 +17,12 @@ Start with the Quick Start Guide.
 | `matrix-heltec_v4_r8-*` | Heltec V4 R8 | Compiled, **untested** |
 | `matrix-heltec_v3-*` | Heltec V3 | Compiled, **untested** |
 | `matrix.html` | any | The dashboard |
+| `Matrix-MNA-dashboard.apk` | Android phone | The dashboard as an app, connects over USB (tested on the V4 R2) |
 
 US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
 
-## Dashboard 1.2.0-beta1
-- **Share a trace between devices.** "Share trace" packs the recorded route and the nodes heard into one file and opens the phone's share sheet (or saves the file when sharing is not available). "Open a trace file" on another device, such as the laptop, loads that file straight into the replay. Tested with a saved file and a second browser page only, not between a phone and a laptop.
+## Dashboard 1.2.0
+- **Share a trace between devices.** "Share trace" packs the recorded route and the nodes heard into one file and opens the phone's share sheet (or saves the file when sharing is not available). "Open a trace file" on another device, such as the laptop, loads that file straight into the replay. Used from the Android app on a phone to a laptop and works.
 
 ## Dashboard 1.1.1-beta1
 - **Phone home-screen icon.** When the dashboard is opened from its hosted web address in Chrome on Android, Chrome's menu offers Install app / Add to Home screen with a Matrix icon. A copy opened from a file does not get this. Not tested on a phone.
@@ -36,9 +37,9 @@ US and UK/EU differ only in the speed unit. The radio region (frequency) is set 
 - **Heading-up radar.** While Follow me is on, the radar turns so the direction you are travelling is at the top (the compass letters, rings and contacts turn with it, and the map under the radar turns too). It uses the GPS course, which only updates while moving, so it holds the last heading when you stop. Tick box above the radar turns it off. Tested with the sample trip in a browser only, not on a radio.
 
 ## Honest limits
-- Nothing here has been run on a real radio by its makers. The firmware builds and the dashboard was tested with sample data in a browser.
-- The Heltec V4 R2 is the intended radio. The V4 R8 and V3 builds only prove that the code compiles for them.
-- The dashboard's Updates button does not know about MATRIX yet.
+- The Heltec V4 R2 firmware, the dashboard on a computer and the Android app on a phone have been used by the makers on a real V4 R2. Heading-up radar, the compass option and the offline map in the replay were tried with sample trips and simulated readings, not on a long real trip.
+- The V4 R8 and V3 builds only prove that the code compiles for them.
+- The dashboard's Updates button updates the dashboard (`matrix.html`) only. It does not flash MATRIX firmware and it does not update the Android app.
 - Several dashboard numbers (link health, signal weather, link budget, range guesses) are estimates.
 
 Engineered by: Aries Thorne & Todd Steinhauer for Wolf Reactive Systems (WRS)
