@@ -37,7 +37,7 @@ US and UK/EU differ only in the speed unit. The radio region (frequency) is set 
 - **Heading-up radar.** While Follow me is on, the radar turns so the direction you are travelling is at the top (the compass letters, rings and contacts turn with it, and the map under the radar turns too). It uses the GPS course, which only updates while moving, so it holds the last heading when you stop. Tick box above the radar turns it off. Tested with the sample trip in a browser only, not on a radio.
 
 ## Honest limits
-- The Heltec V4 R2 firmware, the dashboard on a computer and the Android app on a phone have been used by the makers on a real V4 R2. Heading-up radar, the compass option and the offline map in the replay were tried with sample trips and simulated readings, not on a long real trip.
+- The Heltec V4 R2 firmware, the dashboard on a computer and the Android app on a phone have been used by the makers on a real V4 R2. Turning the radar and the offline map in the replay have been confirmed in the Android app on a Heltec V4 R2. The hosted web address for adding a Matrix icon to a phone home screen has not been tested; use the Android app.
 - The V4 R8 and V3 builds only prove that the code compiles for them.
 - The dashboard's Updates button updates the dashboard (`matrix.html`) only. It does not flash MATRIX firmware and it does not update the Android app.
 - Several dashboard numbers (link health, signal weather, link budget, range guesses) are estimates.
