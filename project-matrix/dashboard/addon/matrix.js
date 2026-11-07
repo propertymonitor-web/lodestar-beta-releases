@@ -1,3 +1,7 @@
+// Imagined and engineered by:
+// Aries Thorne & Todd Steinhauer
+//
+// Moral Support: Athena the K9
 /* ============================================================ PROJECT MATRIX add-on (display only). By: Aries Thorne, For: Matrix Comm. Systems.
    Reads S, S.found, MESH and the {"mx":...} line. It never sends anything to the radio. */
 (function () {

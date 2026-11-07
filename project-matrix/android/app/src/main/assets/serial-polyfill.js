@@ -1,3 +1,7 @@
+// Imagined and engineered by:
+// Aries Thorne & Todd Steinhauer
+//
+// Moral Support: Athena the K9
 (() => {
   if (window.__nsInstalled) return; window.__nsInstalled = true;
   const N = window.AndroidUsb, F = window.AndroidFiles;

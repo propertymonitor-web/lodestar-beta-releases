@@ -1,3 +1,7 @@
+// Imagined and engineered by:
+// Aries Thorne & Todd Steinhauer
+//
+// Moral Support: Athena the K9
 /* ============================================================ TRACE REPLAY (dashboard 1.1.0)
    Full-screen replay of the last recorded trip: the map starts close up on the first point and the marker retraces the route,
    waiting where the radio stood still and showing how long. Repeaters, companions and room servers appear when they were first

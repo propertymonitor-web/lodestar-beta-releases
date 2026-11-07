@@ -1,3 +1,7 @@
+// Imagined and engineered by:
+// Aries Thorne & Todd Steinhauer
+//
+// Moral Support: Athena the K9
 package com.lodestar.matrix
 
 import android.app.PendingIntent

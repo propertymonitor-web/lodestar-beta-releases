@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Imagined and engineered by:
+# Aries Thorne & Todd Steinhauer
+#
+# Moral Support: Athena the K9
 """PROJECT MATRIX firmware patch. Run AFTER the OTR chain (apply_nova, apply_orion_wolf, apply_orion_mesh, apply_orion_tactical).
 
 usage: apply_matrix.py --meshcore /path/to/MeshCore      (build with -DMATRIX=1 on top of the OTR flags)

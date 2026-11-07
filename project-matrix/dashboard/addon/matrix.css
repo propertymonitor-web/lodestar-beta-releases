@@ -1,3 +1,9 @@
+/*
+ Imagined and engineered by:
+ Aries Thorne & Todd Steinhauer
+
+ Moral Support: Athena the K9
+*/
 /* ===== PROJECT MATRIX theme: phosphor green on black, falling code behind the panels ===== */
 html.matrix[data-theme="dark"], html.matrix:where(:not([data-theme="light"])), html.tac.matrix[data-theme="dark"], html.tac.matrix:where(:not([data-theme="light"])){
   color-scheme: dark; --bg: #000402; --panel: #010a05; --line: #0f4a22; --grid: #08301a; --ink: #c8ffd6; --ink2: #7fe79b; --muted: #3fae62;

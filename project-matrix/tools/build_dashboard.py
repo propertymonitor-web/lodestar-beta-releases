@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Imagined and engineered by:
+# Aries Thorne & Todd Steinhauer
+#
+# Moral Support: Athena the K9
 """Builds dashboard/matrix.html = the OTR 1.4.0 dashboard (dashboard/base-otr.html) + the Matrix add-on files.
    python3 tools/build_dashboard.py          writes dashboard/matrix.html
    python3 tools/build_dashboard.py --check  fails if matrix.html is out of date or an anchor is missing"""
