@@ -111,8 +111,12 @@ Field tests: the XIAO ESP32S3 + Wio-SX1262 build was tested by its makers in the
 Dallas-Fort Worth area. It reached from west Fort Worth to just short of
 Heartland, TX, with other repeaters in the path (a real-world result, not a
 single-hop range). The SenseCAP Solar Node build is tested too and is in
-operation as a mobile repeater in a makers' test vehicle. The Heltec V4 R2 is
-still the most-tested board; the XIAO nRF52840 build is untested.
+operation as a mobile repeater in a makers' test vehicle. The makers report it
+has run without problems for 9 days, 11 hours, 48 minutes (as of 2026-11-08).
+It is named LODESTAR MobileSolar; public key:
+  36cb3553f4a2e575cf586417eda24f5607bfb01767641fc84b2ffe5f89cfe3e1
+The Heltec V4 R2 is still the most-tested board; the XIAO nRF52840 build is
+untested.
 
 
 HEARTH  -  the room server
