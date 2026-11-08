@@ -107,6 +107,12 @@ Honest limit: MeshCore does not let a repeater hand a packet to one chosen
 neighbour, so PULSAR steers by timing and by cancelling duplicates. It also
 cannot read your messages (they are encrypted).
 A fixed repeater whose neighbours never change gains less from PULSAR.
+Field tests: the XIAO ESP32S3 + Wio-SX1262 build was tested by its makers in the
+Dallas-Fort Worth area. It reached from west Fort Worth to just short of
+Heartland, TX, with other repeaters in the path (a real-world result, not a
+single-hop range). The SenseCAP Solar Node build is tested too and is in
+operation as a mobile repeater in a makers' test vehicle. The Heltec V4 R2 is
+still the most-tested board; the XIAO nRF52840 build is untested.
 
 
 HEARTH  -  the room server
