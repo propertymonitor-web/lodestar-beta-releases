@@ -17,9 +17,18 @@ Start with the Quick Start Guide.
 | `matrix-heltec_v4_r8-*` | Heltec V4 R8 | Compiled, **untested** |
 | `matrix-heltec_v3-*` | Heltec V3 | Compiled, **untested** |
 | `matrix.html` | any | The dashboard |
+| `matrix-range.html` | any | **Optional** second dashboard: the same as `matrix.html` plus a range-estimate tile (see below). Use either one, or both |
 | `Matrix-MNA-dashboard.apk` | Android phone | The dashboard as an app, connects over USB (tested on the V4 R2) |
 
 US and UK/EU differ only in the speed unit. The radio region (frequency) is set in the MeshCore app.
+
+## Optional: range-estimate dashboard (`matrix-range.html`)
+
+Same dashboard, plus one extra tile that estimates how far a MeshCore radio might reach **right now**, using today's weather. It does **not** replace `matrix.html`; pick the one you like, or keep both. Each keeps its own update check.
+
+- It asks for your location (the radio's GPS if it has a fix, or a ZIP/postal code, or latitude and longitude), frequency, antenna height and gain, indoors or outdoors, and what you are trying to reach. It fills in what the radio reports on its own (frequency, spreading factor, bandwidth, power, measured noise, GPS).
+- Weather comes from the free Open-Meteo service. A ZIP lookup uses zippopotam.us, and a place-name lookup may use OpenStreetMap's Nominatim. These are only contacted when you ask for weather, and the tile works (with standard air) with no internet. Your location is rounded before it is sent. Open-Meteo's free service is for non-commercial use; anyone using this commercially needs their own arrangement with them.
+- **ESTIMATES ONLY.** The tile shows this warning, and it is true: it is a rough calculation from textbook radio formulas (Okumura-Hata and free-space loss, a radio-horizon limit, and the air's bending from forecast data), not a measurement of your radio, antenna, building or terrain. Real range can be much shorter, and sometimes longer. It has been **tested in a browser with practice and mocked weather data, and compared against nothing in the field**. Do not use it for safety or emergency planning. Test your own link.
 
 ## Dashboard 1.2.0
 - **Share a trace between devices.** "Share trace" packs the recorded route and the nodes heard into one file and opens the phone's share sheet (or saves the file when sharing is not available). "Open a trace file" on another device, such as the laptop, loads that file straight into the replay. Used from the Android app on a phone to a laptop and works.

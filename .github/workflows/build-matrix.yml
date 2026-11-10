@@ -74,6 +74,9 @@ jobs:
       - name: Dashboard checks (the page builds and its pieces are all there)
         run: python3 project-matrix/tools/build_dashboard.py --check
 
+      - name: Optional range-estimate dashboard checks (built from the standard dashboard plus the tile)
+        run: python3 project-matrix/tools/build_range_dashboard.py --check
+
       - name: Build firmware
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
@@ -110,6 +113,7 @@ jobs:
           cp $B/firmware.bin "out/$P-update.bin"
           git -C mc rev-parse HEAD > out/meshcore_commit.txt
           cp project-matrix/dashboard/matrix.html out/matrix.html
+          cp project-matrix/dashboard/matrix-range.html out/matrix-range.html
           ls -la out
 
       - uses: actions/upload-artifact@v4
@@ -125,7 +129,7 @@ jobs:
           TAG: ${{ inputs.release_tag }}
           TITLE: ${{ inputs.release_title }}
         run: |
-          FILES="out/matrix-$BOARD-$UNITS-merged.bin out/matrix-$BOARD-$UNITS-update.bin out/matrix.html"
+          FILES="out/matrix-$BOARD-$UNITS-merged.bin out/matrix-$BOARD-$UNITS-update.bin out/matrix.html out/matrix-range.html"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" $FILES --clobber
           else

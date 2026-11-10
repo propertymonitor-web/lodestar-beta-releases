@@ -1,0 +1,59 @@
+    <div class="mxt wide mxr" id="mxRange"><h3>Range estimate <small>how far might this radio reach, with today's weather</small></h3>
+      <div class="mxr-warn" role="note"><b>ESTIMATES ONLY.</b> This is a rough guess from a general radio model, typical textbook numbers and public weather-model data. It is not a measurement of your radio, antenna, cable, building or terrain, and it may not be accurate for your equipment. Real range can be much shorter (hills, buildings, trees, a weak antenna, interference) or, now and then, longer. Do not rely on it for safety or emergency planning. Test your own link.</div>
+      <div class="mxr-cols">
+        <div class="mxr-form">
+          <fieldset><legend>Where is the radio?</legend>
+            <label class="mxr-r"><input type="radio" name="mxrLoc" value="gps"> Use the radio's GPS <span id="mxrGpsNote" class="mxr-dim"></span></label>
+            <label class="mxr-r"><input type="radio" name="mxrLoc" value="zip"> ZIP or postal code <input id="mxrZip" size="8" maxlength="10" placeholder="76107" autocomplete="postal-code" aria-label="ZIP or postal code"> <input id="mxrCc" size="2" maxlength="2" value="us" aria-label="Country code" title="Two-letter country code, for example us, ca, gb"></label>
+            <label class="mxr-r"><input type="radio" name="mxrLoc" value="ll"> Latitude, longitude <input id="mxrLat" size="9" placeholder="32.75" inputmode="decimal" aria-label="Latitude"> <input id="mxrLon" size="9" placeholder="-97.37" inputmode="decimal" aria-label="Longitude"></label>
+            <div class="mxr-dim" id="mxrLocNote"></div>
+          </fieldset>
+          <fieldset><legend>Radio settings</legend>
+            <label class="mxr-r"><input type="checkbox" id="mxrAuto" checked> Take these from the connected radio when it reports them</label>
+            <div class="mxr-grid">
+              <label>Frequency, MHz<input id="mxrF" type="number" step="0.001" min="150" max="2500" value="910.525"></label>
+              <label>Spreading factor<select id="mxrSf"></select></label>
+              <label>Bandwidth, kHz<select id="mxrBw"><option>7.8</option><option>10.4</option><option>15.6</option><option>20.8</option><option>31.25</option><option>41.7</option><option>62.5</option><option>125</option><option>250</option><option>500</option></select></label>
+              <label>TX power, dBm<input id="mxrTx" type="number" step="1" min="-9" max="30" value="22"></label>
+            </div>
+          </fieldset>
+          <fieldset><legend>Antenna and placement</legend>
+            <div class="mxr-grid">
+              <label>Antenna height above the ground<span class="mxr-inl"><input id="mxrH" type="number" step="1" min="1" max="2000" value="20"><select id="mxrHu" aria-label="Height unit"><option value="ft">ft</option><option value="m">m</option></select></span></label>
+              <label>Antenna gain, dBi<input id="mxrG" type="number" step="0.5" min="-10" max="20" value="2"></label>
+              <label>Cable and connector loss, dB<input id="mxrCl" type="number" step="0.5" min="0" max="20" value="0"></label>
+              <label>Where is the radio?<select id="mxrIn"><option value="out">Outdoors</option><option value="window">Indoors, by a window</option><option value="room">Indoors, in a room</option><option value="deep">Indoors, deep inside or a basement</option></select></label>
+            </div>
+          </fieldset>
+          <fieldset><legend>What are you trying to reach?</legend>
+            <div class="mxr-grid">
+              <label>Far end<select id="mxrFar"><option value="hand">Handheld or car, 6 ft up</option><option value="roof" selected>Rooftop repeater, 30 ft</option><option value="tower">Tower or hilltop repeater, 100 ft</option></select></label>
+              <label>Surroundings<select id="mxrEnv"><option value="los">Clear line of sight</option><option value="open">Open country</option><option value="suburban" selected>Suburban</option><option value="urban">Urban</option></select></label>
+            </div>
+            <div class="mxr-dim" id="mxrEnvHelp"></div>
+          </fieldset>
+          <details class="mxr-adv"><summary>More settings</summary>
+            <div class="mxr-grid">
+              <label>Safety margin, dB<input id="mxrM" type="number" step="1" min="0" max="30" value="10"></label>
+              <label>Extra blockage, dB<input id="mxrX" type="number" step="1" min="0" max="40" value="0" title="Heavy trees, a hill in the way, a metal roof. Try 5 to 15."></label>
+              <label>Far antenna gain, dBi<input id="mxrGr" type="number" step="0.5" min="-10" max="20" value="2"></label>
+              <label class="mxr-r"><input type="checkbox" id="mxrNf" checked> Count the radio's measured noise</label>
+            </div>
+          </details>
+          <div class="mxr-btns"><button type="button" id="mxrGo" class="primary">Update weather now</button><button type="button" id="mxrReset">Reset answers</button></div>
+          <div class="mxr-dim" id="mxrNet"></div>
+        </div>
+        <div class="mxr-out">
+          <div class="mxr-dim">Estimated reliable range, right now</div>
+          <div class="big" id="mxrBig">--</div>
+          <div class="sub" id="mxrSub">fill in the questions on the left</div>
+          <div class="mxr-band" id="mxrBand"></div>
+          <div class="sub mxr-wx" id="mxrWx"></div>
+          <h4>The air right now</h4><div class="kv" id="mxrAtm"><span>weather</span><b>not loaded</b></div>
+          <h4>How the number was worked out</h4><div class="kv" id="mxrBud"></div>
+          <h4>Path loss against distance <small>the line is the most loss this link can take</small></h4><canvas id="mxrCvPl" height="150"></canvas>
+          <h4>Next 24 hours <small>estimated range, hour by hour</small></h4><canvas id="mxrCv24" height="110"></canvas><div class="sub" id="mxrSub24"></div>
+        </div>
+      </div>
+      <div class="mxr-foot" id="mxrFoot"></div>
+    </div>
