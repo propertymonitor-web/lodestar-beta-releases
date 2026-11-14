@@ -1,0 +1,108 @@
+name: Build PROJECT MATRIX firmware with contacts backup (TEST)
+
+# The standard Matrix firmware (see build-matrix.yml, untouched) plus:
+#   * project-matrix-contacts-test/tools/apply_contacts.py   : `nova contacts` / `nova contact add` on the USB link
+#   * project-matrix-contacts-test/tools/apply_safe_save.py  : contact list saved safely (ESP32)
+# Run by hand only. The result is a DRAFT release: not public, and the current Matrix release is not touched.
+on:
+  workflow_dispatch:
+    inputs:
+      units: { description: "Speed units: mph or metric", type: choice, default: mph, options: [mph, metric] }
+      env: { description: "PlatformIO environment", type: string, default: heltec_v4_companion_radio_ble }
+      board: { description: "Short name for file names", type: string, default: heltec_v4 }
+      meshcore_ref: { description: "MeshCore commit to build on", type: string, default: 81dbae592ffad40b4212bc0b37e82b38da08f4bc }
+      release_tag: { description: "Draft release tag (empty = just build)", type: string, default: "matrix-contacts-test-1" }
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PIO_ENV: ${{ inputs.env }}
+      UNITS: ${{ inputs.units }}
+      BOARD: ${{ inputs.board }}
+      MC_REF: ${{ inputs.meshcore_ref }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { repository: propertymonitor-web/lodestar_nova_alpha, path: orion }
+      - uses: actions/checkout@v4
+        with: { repository: propertymonitor-web/wolf_companion, path: wolf }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+
+      - name: PC tests (radio-side logic with memory checkers, dashboard file checks)
+        run: |
+          g++ -std=c++17 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=undefined -Wall -Wextra project-matrix-contacts-test/test/test_contacts.cpp -o tc
+          ./tc
+          node project-matrix-contacts-test/test/test_contacts_model.js
+          python3 project-matrix-contacts-test/tools/build_contacts_dashboard.py
+
+      - name: Get MeshCore
+        run: |
+          git init mc
+          cd mc
+          git remote add origin https://github.com/meshcore-dev/MeshCore.git
+          git fetch --depth 1 origin "$MC_REF"
+          git checkout FETCH_HEAD
+
+      - name: Apply the standard Matrix build, then contacts backup and safe save
+        run: |
+          python3 orion/tools/apply_nova.py --meshcore mc
+          python3 wolf/tools/apply_orion_wolf.py --meshcore mc
+          python3 wolf/tools/apply_orion_mesh.py --meshcore mc
+          python3 wolf/tools/apply_orion_tactical.py --meshcore mc
+          python3 project-matrix/tools/apply_matrix.py --meshcore mc
+          python3 project-matrix-contacts-test/tools/apply_contacts.py --meshcore mc
+          python3 project-matrix-contacts-test/tools/apply_safe_save.py --meshcore mc
+
+      - name: Build firmware
+        run: |
+          set -o pipefail
+          export PLATFORMIO_BUILD_FLAGS="-DNOVA_ORION=1 -DPET_WOLF=1 $([ "$UNITS" = mph ] && echo -DNOVA_MPH=1) -DTACTICAL=1 -DOTR=1 -DMATRIX=1"
+          pip install platformio
+          cd mc
+          pio run -e "$PIO_ENV" -t mergebin 2>&1 | tee ../build.log
+
+      - name: Show compile errors
+        if: ${{ failure() }}
+        run: |
+          { grep -E "error|overflow|will not fit|region|FAILED|undefined reference|No such file" build.log; tail -n 12 build.log; } | head -40 | while IFS= read -r l; do
+            echo "::error::${l:0:900}"
+          done
+
+      - name: Check the new code is inside the build
+        run: |
+          B=mc/.pio/build/"$PIO_ENV"
+          for T in "contacts_end" "contact_ack" "/contacts3.new" "By: Aries Thorne"; do strings -n 5 "$B/firmware.bin" | grep -q -F "$T" || { echo "::error::missing from the build: $T"; exit 1; }; done
+          echo "contacts backup and safe save found in the build"
+
+      - name: Collect output
+        run: |
+          mkdir -p out
+          B=mc/.pio/build/"$PIO_ENV"
+          P="matrix-contacts-test-$BOARD-$UNITS"
+          cp $B/firmware-merged.bin "out/$P-merged.bin"
+          cp $B/firmware.bin "out/$P-update.bin"
+          git -C mc rev-parse HEAD > out/meshcore_commit.txt
+          cp project-matrix-contacts-test/dashboard/matrix-contacts.html out/matrix-contacts.html
+          cp project-matrix-contacts-test/README.md out/README-contacts-test.md
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matrix-contacts-test-${{ env.BOARD }}-${{ env.UNITS }}
+          path: out/
+
+      - name: Draft release (not public)
+        if: ${{ inputs.release_tag != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          gh release create "$TAG" out/* --draft --prerelease --title "PROJECT MATRIX contacts backup (TEST, draft)" \
+            --notes "TEST BUILD of the Matrix firmware with USB contacts backup and a safe contact save. Not hardware-tested. The standard Matrix release is not changed. See README-contacts-test.md."
